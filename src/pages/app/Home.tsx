@@ -18,10 +18,10 @@ export const Home = () => {
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { icon: MessageSquare, label: "Debates", to: "/app/debates", color: "bg-orange-50 text-orange-600" },
-          { icon: BookOpen, label: "Artigos", to: "/app/artigos", color: "bg-blue-50 text-blue-600" },
-          { icon: Bot, label: "Perguntar IA", to: "/app/ia", color: "bg-violet-50 text-violet-600" },
-          { icon: Headphones, label: "Girassol Lê", to: "/app/artigos", color: "bg-emerald-50 text-emerald-600" },
+          { icon: MessageSquare, label: "Debates", to: "/app/debates", color: "bg-orange-50 text-orange-500" },
+          { icon: BookOpen, label: "Artigos", to: "/app/artigos", color: "bg-orange-50 text-orange-500" },
+          { icon: Bot, label: "Perguntar IA", to: "/app/ia", color: "bg-orange-50 text-orange-500" },
+          { icon: Headphones, label: "Girassol Lê", to: "/app/artigos", color: "bg-orange-50 text-orange-500" },
         ].map(({ icon: Icon, label, to, color }) => (
           <Link key={label} to={to} className="card-app p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>
@@ -48,7 +48,7 @@ export const Home = () => {
           <h3 className="font-display font-bold text-base leading-snug">{debates[0].title}</h3>
           <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{debates[0].summary}</p>
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><Users size={11} />{debates[0].participants}</span>
+            <span className="flex items-center gap-1"><Users size={11} className="text-orange-500" />{debates[0].participants}</span>
             <span>{debates[0].experts} especialistas</span>
             <span>{debates[0].comments.length} comentários</span>
           </div>
@@ -67,14 +67,14 @@ export const Home = () => {
           {articles.slice(0, 2).map((a) => (
             <Link key={a.id} to={`/app/artigos/${a.id}`} className="card-app flex gap-3 p-4 hover:shadow-md transition-shadow">
               <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/20 to-primary/40 shrink-0 flex items-center justify-center">
-                <BookOpen size={20} className="text-primary/60" />
+                <BookOpen size={20} className="text-orange-500" />
               </div>
               <div className="flex-1 min-w-0">
                 <span className="font-mono-accent text-[10px] uppercase text-primary">{a.category}</span>
                 <h3 className="font-display font-bold text-sm leading-snug mt-0.5">{a.title}</h3>
                 <div className="flex items-center gap-2 mt-1.5">
                   {a.audioAvailable && (
-                    <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
+                    <span className="flex items-center gap-1 text-[10px] text-orange-500 font-semibold">
                       <Headphones size={10} />Audio {a.audioDuration}
                     </span>
                   )}
@@ -110,7 +110,7 @@ export const Home = () => {
         </div>
         <div>
           <div className="font-display font-bold text-xl text-primary">
-            <Zap size={18} className="inline" />
+            <Zap size={18} className="inline text-orange-500" />
           </div>
           <div className="text-[10px] text-muted-foreground font-mono-accent uppercase">Activo</div>
         </div>
