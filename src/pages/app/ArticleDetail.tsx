@@ -6,7 +6,7 @@ import { TermTooltip } from "../../components/ui/TermTooltip";
 import { useAuth } from "../../context/AuthContext";
 import { AIResponseModal } from "../../components/ui/AIResponseModal";
 import { askAboutArticle } from "../../services/aiService";
-import { ChevronLeft, Headphones, Play, Pause, Bot, Send } from "lucide-react";
+import { ChevronLeft, Headphones, Play, Pause, Bot, Send, ExternalLink, BookMarked, MessageSquareQuote } from "lucide-react";
 
 export const ArticleDetail = () => {
   const { id } = useParams();
@@ -54,6 +54,7 @@ export const ArticleDetail = () => {
     </div>
   );
 
+  const isOpinion = !article.references || article.references.length === 0;
   const currentLevel = article.levels.find((l) => l.id === level)!;
 
   const renderTextWithTerms = (text: string) => {
@@ -83,7 +84,14 @@ export const ArticleDetail = () => {
         <Link to="/app/artigos" className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
           <ChevronLeft size={15} /> Artigos
         </Link>
-        <span className="pill bg-primary/10 text-primary">{article.category}</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="pill bg-primary/10 text-primary">{article.category}</span>
+          {isOpinion && (
+            <span className="flex items-center gap-1 pill bg-amber-50 text-amber-700 border border-amber-200">
+              <MessageSquareQuote size={11} /> Opinião
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="px-4 py-4 space-y-5">
@@ -160,13 +168,52 @@ export const ArticleDetail = () => {
           </div>
         </div>
 
+        {/* References or Opinion notice */}
+        {isOpinion ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+            <MessageSquareQuote size={18} className="text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-sm text-amber-800">Artigo de Opinião</p>
+              <p className="text-xs text-amber-700 leading-relaxed mt-0.5">
+                Este conteúdo não apresenta referências bibliográficas verificáveis. Representa o ponto de vista do autor e não constitui reportagem factual.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <h2 className="font-display font-bold text-base mb-3 flex items-center gap-2">
+              <BookMarked size={16} className="text-primary" /> Referências
+            </h2>
+            <div className="space-y-2">
+              {article.references!.map((ref, i) => (
+                <div key={i} className="card-app px-4 py-3 flex items-start gap-3">
+                  <span className="text-[10px] font-bold text-muted-foreground font-mono-accent mt-0.5 shrink-0 w-4">[{i + 1}]</span>
+                  {ref.url ? (
+                    <a
+                      href={ref.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline leading-snug flex-1 flex items-start gap-1"
+                    >
+                      {ref.label}
+                      <ExternalLink size={11} className="shrink-0 mt-0.5" />
+                    </a>
+                  ) : (
+                    <p className="text-sm text-muted-foreground leading-snug flex-1">{ref.label}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Ask AI */}
         <div className="card-app p-4 space-y-3">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center shrink-0">
               <Bot size={14} className="text-white" />
             </div>
-            <p className="font-display font-bold text-sm">Perguntar à IA Girassol</p>
+            <p className="font-display font-bold text-sm">Perguntar à Weza</p>
           </div>
 
           {/* Suggested questions */}

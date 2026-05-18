@@ -32,7 +32,7 @@ export const AIResponseModal = ({
             <Bot size={16} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-display font-bold text-sm">Weza · IA Girassol</p>
+            <p className="font-display font-bold text-sm">Weza</p>
             <p className="text-[10px] text-muted-foreground truncate">{context}</p>
           </div>
           {!loading && (

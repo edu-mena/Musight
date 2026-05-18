@@ -7,7 +7,7 @@ const FEATURES = [
   { icon: MessageSquare, title: "Debates com Propósito", desc: "Participa em debates sobre as notícias do dia. Especialistas e cidadãos, lado a lado." },
   { icon: BookOpen, title: "Níveis de Explicação", desc: "A mesma notícia em 3 profundidades — do resumo simples à análise técnica." },
   { icon: Zap, title: "Termos-Chave", desc: "Palavras difíceis ficam sublinhadas. Clica para ver a definição sem sair do texto." },
-  { icon: Bot, title: "IA Girassol", desc: "Faz perguntas sobre qualquer artigo. A IA responde com contexto e fontes verificadas." },
+  { icon: Bot, title: "Weza", desc: "Faz perguntas sobre qualquer artigo. A Weza responde com contexto e fontes verificadas." },
   { icon: Headphones, title: "Girassol Lê", desc: "Artigos narrados em áudio. Ouve enquanto vives o teu dia — 3 episódios por semana." },
   { icon: Users, title: "Especialistas Comentam", desc: "Economistas, juristas e médicos explicam o contexto das notícias em primeira mão." },
 ];
@@ -33,7 +33,7 @@ export const Landing = () => (
             <span className="text-gradient">Compreende.</span>
           </h1>
           <p className="mt-6 text-lg text-white/75 max-w-lg">
-            O app que te explica Angola e o mundo ao teu nível. Debates com especialistas, artigos com termos-chave interactivos e IA para as tuas perguntas.
+            O app que te explica Angola e o mundo ao teu nível. Debates com especialistas, artigos com termos-chave interactivos e a Weza para as tuas perguntas.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/register" className="btn-primary">Criar conta gratuita</Link>
@@ -177,7 +177,7 @@ export const Landing = () => (
                 <Lock size={20} className="text-muted-foreground" />
               </div>
               <p className="font-display font-bold text-lg mb-1">Cria uma conta para ver mais</p>
-              <p className="text-sm text-muted-foreground mb-5">Acesso gratuito a todos os debates, artigos e à IA.</p>
+              <p className="text-sm text-muted-foreground mb-5">Acesso gratuito a todos os debates, artigos e à Weza.</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link to="/register" className="btn-primary">Criar conta — é grátis</Link>
                 <Link to="/login" className="btn-ghost">Já tenho conta</Link>

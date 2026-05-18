@@ -11,6 +11,7 @@ import { Articles } from "./pages/app/Articles";
 import { ArticleDetail } from "./pages/app/ArticleDetail";
 import { AIChat } from "./pages/app/AIChat";
 import { Profile } from "./pages/app/Profile";
+import { Policies } from "./pages/Policies";
 import type { ReactNode } from "react";
 
 const Protected = ({ children }: { children: ReactNode }) => {
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/politicas" element={<Policies />} />
           <Route path="/app/*" element={<AppLayout />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

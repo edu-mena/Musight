@@ -20,7 +20,7 @@ export const Home = () => {
         {[
           { icon: MessageSquare, label: "Debates", to: "/app/debates", color: "bg-orange-50 text-orange-500" },
           { icon: BookOpen, label: "Artigos", to: "/app/artigos", color: "bg-orange-50 text-orange-500" },
-          { icon: Bot, label: "Perguntar IA", to: "/app/ia", color: "bg-orange-50 text-orange-500" },
+          { icon: Bot, label: "Perguntar à Weza", to: "/app/ia", color: "bg-orange-50 text-orange-500" },
           { icon: Headphones, label: "Girassol Lê", to: "/app/artigos", color: "bg-orange-50 text-orange-500" },
         ].map(({ icon: Icon, label, to, color }) => (
           <Link key={label} to={to} className="card-app p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
@@ -90,9 +90,9 @@ export const Home = () => {
       <Link to="/app/ia" className="block rounded-2xl p-5 bg-gradient-primary text-white">
         <div className="flex items-center gap-2 mb-2">
           <Bot size={18} />
-          <span className="font-display font-bold">IA Girassol</span>
+          <span className="font-display font-bold">Weza</span>
         </div>
-        <p className="text-sm text-white/85">Tens dúvidas sobre uma notícia? Pergunta à IA com contexto e fontes verificadas.</p>
+        <p className="text-sm text-white/85">Tens dúvidas sobre uma notícia? Pergunta à Weza com contexto e fontes verificadas.</p>
         <div className="flex items-center gap-1 mt-3 text-xs font-semibold">
           Fazer uma pergunta <ChevronRight size={12} />
         </div>

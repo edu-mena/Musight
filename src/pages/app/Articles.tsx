@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { articles } from "../../data/articles";
-import { BookOpen, Headphones, ChevronRight } from "lucide-react";
+import { BookOpen, Headphones, ChevronRight, MessageSquareQuote } from "lucide-react";
 
 export const Articles = () => (
   <div className="px-4 py-5">
@@ -13,7 +13,14 @@ export const Articles = () => (
             <BookOpen size={24} className="text-primary/60" />
           </div>
           <div className="flex-1 min-w-0">
-            <span className="font-mono-accent text-[10px] uppercase text-primary">{a.category}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-mono-accent text-[10px] uppercase text-primary">{a.category}</span>
+              {(!a.references || a.references.length === 0) && (
+                <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-semibold">
+                  <MessageSquareQuote size={10} /> Opinião
+                </span>
+              )}
+            </div>
             <h3 className="font-display font-bold text-sm leading-snug mt-0.5">{a.title}</h3>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <span className="pill bg-secondary text-muted-foreground !py-0.5 !px-2">3 níveis</span>

@@ -11,7 +11,7 @@ const SUGGESTIONS = [
 ];
 
 const MOCK_RESPONSES: Record<string, string> = {
-  default: "Esta é uma demonstração do GiraSightin. Numa versão real, a IA Girassol responderia à tua pergunta com contexto jornalístico verificado pela redacção da Rede Girassol.",
+  default: "Esta é uma demonstração do GiraSightin. Numa versão real, a Weza responderia à tua pergunta com contexto jornalístico verificado pela redacção da Rede Girassol.",
   taxa: "A **taxa BNA** é a taxa de juro de referência definida pelo Banco Nacional de Angola. Quando o BNA a sobe, os créditos bancários ficam mais caros — o que reduz o consumo e ajuda a travar a inflação. Actualmente está em 19,5%.",
   colera: "A **cólera** é uma doença causada por uma bactéria transmitida por água ou alimentos contaminados. Os sintomas principais são diarreia intensa e desidratação. O tratamento básico são os Sais de Reidratação Oral (SRO). Para te proteger: bebe água fervida, lava as mãos e cozinha bem os alimentos.",
   embaixada: "Uma **embaixada** representa o governo do teu país noutro país e trata de relações diplomáticas e políticas. Um **consulado** tem funções mais práticas: passaportes, vistos e apoio a cidadãos no estrangeiro. Todas as capitais têm embaixadas; os consulados ficam nas principais cidades.",
@@ -56,7 +56,7 @@ export const AIChat = () => {
               <Bot size={26} className="text-white" />
             </div>
             <div>
-              <h2 className="font-display font-bold text-xl">IA Girassol</h2>
+              <h2 className="font-display font-bold text-xl">Weza</h2>
               <p className="text-sm text-muted-foreground mt-1">Faz perguntas sobre notícias, artigos ou conceitos difíceis.</p>
             </div>
             <div className="w-full space-y-2">

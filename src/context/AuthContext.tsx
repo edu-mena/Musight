@@ -1,15 +1,31 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 
+export interface ExpertiseItem {
+  topic: string;
+  level: "basico" | "intermedio" | "avancado";
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   avatar: string;
-  role: "user" | "expert";
+  role: "user" | "expert" | "researcher";
   joinedAt: string;
   contributions: number;
   debates: number;
+  verified?: boolean;
+  // academic
+  academicLevel?: string;
+  academicArea?: string;
+  institution?: string;
+  // professional
+  profession?: string;
+  organization?: string;
+  bio?: string;
+  // knowledge areas
+  expertise?: ExpertiseItem[];
 }
 
 interface AuthContextType {
@@ -17,6 +33,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (updates: Partial<User>) => void;
   loading: boolean;
 }
 
@@ -82,8 +99,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const updateProfile = (updates: Partial<User>) => {
+    if (!user) return;
+    const updated = { ...user, ...updates };
+    localStorage.setItem("girasightin_user", JSON.stringify(updated));
+    setUser(updated);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, loading }}>
       {children}
     </AuthContext.Provider>
   );

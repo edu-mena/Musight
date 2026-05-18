@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Logo } from "../components/layout/Logo";
 import { Loader2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export const Register = () => {
   const { register } = useAuth();
@@ -13,11 +14,13 @@ export const Register = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) { setError("Preenche todos os campos."); return; }
     if (password.length < 6) { setError("A password deve ter pelo menos 6 caracteres."); return; }
+    if (!termsAccepted) { setError("Tens de aceitar os Termos de Uso para continuar."); return; }
     setLoading(true);
     setError("");
     try {
@@ -59,9 +62,40 @@ export const Register = () => {
               </div>
             ))}
 
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <div className="relative mt-0.5 shrink-0">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-5 h-5 rounded-md border-2 border-border peer-checked:border-primary peer-checked:bg-primary transition-all flex items-center justify-center">
+                  {termsAccepted && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <span className="text-sm text-muted-foreground leading-snug">
+                Li e aceito os{" "}
+                <a
+                  href="/politicas"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary font-semibold hover:underline inline-flex items-center gap-0.5"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Termos de Uso e Política de Privacidade
+                  <ExternalLink size={11} className="inline" />
+                </a>
+              </span>
+            </label>
+
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+            <button type="submit" disabled={loading || !termsAccepted} className="btn-primary w-full mt-2 disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? <Loader2 size={16} className="animate-spin" /> : "Criar conta"}
             </button>
           </form>

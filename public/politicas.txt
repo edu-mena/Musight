@@ -1,0 +1,112 @@
+SIGHTIN — DOCUMENTAÇÃO LEGAL OFICIAL
+BoldCode, Lda
+Versão 1.0
+Entrada em vigor Junho de 2026
+Empresa BoldCode, Lda
+Website https://boldcode.ao
+Contacto contacto@boldcode.ao
+Compliance complience@boldcode.ao
+Localização Luanda, Viana, Projecto Morar QH2, Angola
+1. TERMOS E CONDIÇÕES DE USO
+A SIGHTIN é uma plataforma digital mobile-first de jornalismo cívico, debates públicos e
+contextualização informativa assistida por inteligência artificial.
+Ao utilizar a plataforma, o utilizador concorda com os presentes Termos e Condições, bem como com
+todas as políticas complementares da BoldCode, Lda.
+A idade mínima para utilização da plataforma é de 12 anos.
+É proibido:
+• publicar conteúdo ilegal, ofensivo ou abusivo;
+• praticar assédio, discriminação ou discurso de ódio;
+• divulgar dados privados de terceiros;
+• manipular debates ou sistemas da plataforma;
+• utilizar bots abusivos, spam ou engenharia social;
+• explorar vulnerabilidades técnicas.
+A BoldCode poderá remover conteúdos, suspender funcionalidades ou encerrar contas em caso de
+violação das regras da comunidade ou risco para a segurança da plataforma.
+2. POLÍTICA DE PRIVACIDADE
+A BoldCode compromete-se a tratar dados pessoais com transparência, segurança e
+proporcionalidade.
+A plataforma poderá recolher:
+• nome e e-mail;
+• fotografia de perfil;
+• dados de sessão e autenticação;
+• endereço IP e dados técnicos;
+• perguntas feitas à IA Weza;
+• comentários, debates e contribuições;
+• uploads de imagens;
+• dados de segurança e prevenção de fraude.
+Os dados poderão ser utilizados para:
+• autenticação;
+• personalização;
+• funcionamento da IA;
+• analytics internos;
+• segurança;
+• notificações push;
+• prevenção de abuso;
+• melhoria contínua da plataforma.
+Os utilizadores poderão solicitar acesso, correcção ou eliminação de dados através de:
+complience@boldcode.ao
+3. POLÍTICA DE IA — WEZA
+A Weza é uma assistente baseada em inteligência artificial generativa.
+As respostas da Weza:
+• são produzidas automaticamente;
+• podem conter erros;
+• podem interpretar contexto incorrectamente;
+• não substituem aconselhamento profissional.
+A IA poderá utilizar contexto do artigo, debate ou pergunta do utilizador para gerar respostas mais
+contextualizadas.
+A BoldCode aplica princípios de minimização de dados e segurança no tratamento das
+interacções com IA.
+4. POLÍTICA DE MODERAÇÃO
+A SIGHTIN procura manter um espaço seguro, respeitoso e equilibrado.
+A plataforma poderá:
+• remover conteúdos;
+• limitar alcance de publicações;
+• suspender utilizadores;
+• encerrar contas;
+• cooperar com autoridades quando necessário.
+Utilizadores poderão denunciar:
+• violência;
+• assédio;
+• spam;
+• desinformação;
+• fraude;
+• discurso de ódio.
+5. POLÍTICA DE COOKIES
+A plataforma utiliza cookies, localStorage e tecnologias semelhantes para:
+• autenticação;
+• persistência de sessão;
+• preferências da interface;
+• analytics;
+• segurança;
+• estabilidade técnica.
+O utilizador poderá apagar ou bloquear cookies através do navegador, embora certas funcionalidades
+possam deixar de funcionar correctamente.
+6. POLÍTICA DE SEGURANÇA
+A BoldCode implementa medidas técnicas e organizativas de segurança, incluindo:
+• HTTPS obrigatório;
+• hashing seguro de palavras-passe;
+• controlo de acessos;
+• backups;
+• logs de segurança;
+• monitorização de actividade suspeita;
+• protecção contra SQL Injection, XSS e brute force.
+Em caso de incidente de segurança, a BoldCode poderá limitar acessos, preservar evidências e
+notificar utilizadores ou autoridades quando exigido por lei.
+7. CONSENTIMENTO DO UTILIZADOR
+Ao criar conta na SIGHTIN, o utilizador confirma que:
+• leu e aceita os Termos e Condições;
+• compreende a Política de Privacidade;
+• aceita a Política de Cookies;
+• compreende que a Weza utiliza inteligência artificial generativa;
+• compromete-se a respeitar as regras da comunidade.
+8. CONTACTOS OFICIAIS
+BoldCode, Lda
+Luanda, Viana, Projecto Morar QH2, Angola
+Website:
+https://boldcode.ao
+Contacto Geral:
+contacto@boldcode.ao
+Privacidade e Compliance:
+complience@boldcode.ao
+© 2026 BoldCode, Lda. Todos os direitos reservados.
+Documento preparado para utilização oficial da plataforma SIGHTIN.

@@ -10,6 +10,11 @@ export interface ExplainLevel {
   text: string;
 }
 
+export interface Reference {
+  label: string;
+  url?: string;
+}
+
 export interface Article {
   id: string;
   category: string;
@@ -21,6 +26,7 @@ export interface Article {
   audioAvailable: boolean;
   audioDuration?: string;
   audioSrc?: string;
+  references?: Reference[];
 }
 
 export const articles: Article[] = [
@@ -33,6 +39,10 @@ export const articles: Article[] = [
     audioAvailable: true,
     audioDuration: "8 min",
     audioSrc: "/artigos/audios/Estabilidade Monetária O BNA e a Protecção do Poder de Compra.mp3",
+    references: [
+      { label: "BNA — Comunicado do Comité de Política Monetária, Maio 2026", url: "https://www.bna.ao" },
+      { label: "INE Angola — Índice de Preços no Consumidor, Abril 2026", url: "https://www.ine.gov.ao" },
+    ],
     keyTerms: [
       { term: "Taxa BNA", definition: "Principal instrumento de política monetária. Ao ajustá-la, o Banco Central sinaliza ao mercado o custo do dinheiro, visando controlar a liquidez e a inflação." },
       { term: "Estabilidade de Preços", definition: "Objectivo primordial do Executivo para garantir que o salário das famílias angolanas mantenha o seu valor real ao longo do tempo." },
@@ -67,6 +77,10 @@ export const articles: Article[] = [
     image: null,
     audioAvailable: true,
     audioDuration: "6 min",
+    references: [
+      { label: "MIREX — Nota à Imprensa: Inauguração do Consulado Geral em Ottawa, Março 2026" },
+      { label: "Convenção de Viena sobre Relações Consulares (1963)", url: "https://www.un.org/en/genocideprevention/documents/atrocity-crimes/Doc.23_Vienna%20Convention%20on%20Consular%20Relations.pdf" },
+    ],
     keyTerms: [
       { term: "Diplomacia Económica", definition: "Estratégia do Executivo que utiliza as relações externas para atrair investimento estrangeiro e criar mercados para produtos angolanos." },
       { term: "Protecção Consular", definition: "Dever do Estado em prestar assistência jurídica, administrativa e social aos angolanos que residem ou viajam pelo estrangeiro." },
@@ -132,6 +146,11 @@ export const articles: Article[] = [
     image: null,
     audioAvailable: true,
     audioDuration: "10 min",
+    references: [
+      { label: "ANACIP — Relatório de Operacionalização AIAAN, 1.º Trimestre 2026" },
+      { label: "Ministério dos Transportes — Plano Estratégico do Sector Aéreo 2025–2030" },
+      { label: "TAAG Angola Airlines — Comunicado de Imprensa, Abril 2026", url: "https://www.taag.com" },
+    ],
     keyTerms: [
       { term: "Hub Logístico", definition: "Ponto central de transporte que liga diferentes partes do mundo, gerando receitas através de taxas aeroportuárias e serviços de carga." },
       { term: "ZEE", definition: "Zona Económica Especial - áreas com benefícios fiscais próximas a grandes infraestruturas para atrair fábricas e empresas." },
@@ -165,6 +184,11 @@ export const articles: Article[] = [
     image: null,
     audioAvailable: true,
     audioDuration: "12 min",
+    references: [
+      { label: "Ministério da Agricultura e Florestas — Plano Nacional de Desenvolvimento de Grãos 2025–2030", url: "https://www.minagri.gov.ao" },
+      { label: "Banco Mundial — Angola Agricultural Sector Review, 2025" },
+      { label: "FAO — Perspectivas de Colheitas e Situação Alimentar: Angola, Março 2026", url: "https://www.fao.org" },
+    ],
     keyTerms: [
       { term: "Autossuficiência", definition: "Capacidade de um país produzir internamente tudo o que consome, eliminando a dependência de importações estrangeiras." },
       { term: "Cadeia de Valor", definition: "O percurso total de um produto, desde a preparação do solo, colheita, processamento industrial até chegar à mesa do consumidor." },
@@ -231,6 +255,11 @@ export const articles: Article[] = [
     date: "05 MAI 2026",
     image: null,
     audioAvailable: false,
+    references: [
+      { label: "Governo de Angola — Acordo de Concessão Corredor do Lobito, 2024" },
+      { label: "SADC — Regional Infrastructure Development Master Plan, 2025", url: "https://www.sadc.int" },
+      { label: "Porto do Lobito — Relatório Anual de Operações 2025" },
+    ],
     keyTerms: [
       { term: "Intermodalidade", definition: "A combinação de diferentes meios de transporte (comboio, navio, camião) para mover mercadorias de forma rápida e barata." },
       { term: "Parceria Público-Privada (PPP)", definition: "Contrato onde o Governo e empresas privadas trabalham juntos para gerir grandes infraestruturas, dividindo custos e lucros." },

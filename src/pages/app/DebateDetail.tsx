@@ -111,7 +111,7 @@ export const DebateDetail = () => {
             onClick={handleAnalyseDebate}
             className="mt-4 flex items-center gap-2 btn-primary !py-2 !px-4 !text-xs w-fit"
           >
-            <Bot size={13} /> Consultar IA sobre este debate
+            <Bot size={13} /> Consultar a Weza sobre este debate
           </button>
         </div>
 
@@ -187,7 +187,7 @@ export const DebateDetail = () => {
                         onClick={() => handleAnalyseComment(c)}
                         className="flex items-center gap-1 text-[10px] font-semibold text-primary hover:text-primary/80 transition-colors"
                       >
-                        <Bot size={11} /> Consultar IA
+                        <Bot size={11} /> Consultar a Weza
                       </button>
                     </div>
                   </div>

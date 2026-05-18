@@ -8,7 +8,7 @@ const TABS = [
   { to: "/app", icon: Home, label: "Início" },
   { to: "/app/debates", icon: MessageSquare, label: "Debates" },
   { to: "/app/artigos", icon: BookOpen, label: "Artigos" },
-  { to: "/app/ia", icon: Bot, label: "IA" },
+  { to: "/app/ia", icon: Bot, label: "Weza" },
   { to: "/app/perfil", icon: User, label: "Perfil" },
 ];
 
