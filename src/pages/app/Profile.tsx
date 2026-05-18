@@ -116,6 +116,7 @@ export const Profile = () => {
   const hasInfo = academicLevel || profession || bio;
 
   return (
+    <>
     <div className="px-4 py-5 space-y-5">
 
       {/* Avatar + name */}
@@ -449,5 +450,6 @@ export const Profile = () => {
         onClose={() => setShowWriterModal(false)}
       />
     )}
+    </>
   );
 };
