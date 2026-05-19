@@ -3,7 +3,6 @@ import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { api, type ApiArticle } from "../../lib/apiClient";
 import { TermTooltip } from "../../components/ui/TermTooltip";
-import { useAuth } from "../../context/AuthContext";
 import { AIResponseModal } from "../../components/ui/AIResponseModal";
 import { ChevronLeft, Headphones, Play, Pause, Bot, Send, ExternalLink, BookMarked, MessageSquareQuote } from "lucide-react";
 
@@ -13,7 +12,6 @@ function Spinner() {
 
 export const ArticleDetail = () => {
   const { id } = useParams();
-  const { user } = useAuth();
   const [article, setArticle] = useState<ApiArticle | null>(null);
   const [loading, setLoading] = useState(true);
   const [level, setLevel] = useState<"basico" | "intermedio" | "avancado">("basico");

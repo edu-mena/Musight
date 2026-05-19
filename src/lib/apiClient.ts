@@ -32,6 +32,7 @@ export interface ApiArticle {
   image?: string | null;
   has_references: boolean;
   views: number;
+  comment_count?: number;
   status: string;
   rejection_reason?: string | null;
   levels?: Array<{
