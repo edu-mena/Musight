@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bot, Send, User } from "lucide-react";
+import { api } from "../../lib/apiClient";
 
 interface Message { id: string; role: "user" | "ai"; text: string; }
 
@@ -9,23 +10,6 @@ const SUGGESTIONS = [
   "Qual é a diferença entre embaixada e consulado?",
   "O que é inflação e porque sobe?",
 ];
-
-const MOCK_RESPONSES: Record<string, string> = {
-  default: "Esta é uma demonstração do GiraSightin. Numa versão real, a Weza responderia à tua pergunta com contexto jornalístico verificado pela redacção da Rede Girassol.",
-  taxa: "A **taxa BNA** é a taxa de juro de referência definida pelo Banco Nacional de Angola. Quando o BNA a sobe, os créditos bancários ficam mais caros — o que reduz o consumo e ajuda a travar a inflação. Actualmente está em 19,5%.",
-  colera: "A **cólera** é uma doença causada por uma bactéria transmitida por água ou alimentos contaminados. Os sintomas principais são diarreia intensa e desidratação. O tratamento básico são os Sais de Reidratação Oral (SRO). Para te proteger: bebe água fervida, lava as mãos e cozinha bem os alimentos.",
-  embaixada: "Uma **embaixada** representa o governo do teu país noutro país e trata de relações diplomáticas e políticas. Um **consulado** tem funções mais práticas: passaportes, vistos e apoio a cidadãos no estrangeiro. Todas as capitais têm embaixadas; os consulados ficam nas principais cidades.",
-  inflacao: "**Inflação** é quando os preços sobem de forma generalizada e contínua. Com 23,4% de inflação, um produto que custava 1 000 Kz há um ano custa agora cerca de 1 234 Kz. As causas em Angola incluem a desvalorização do kwanza e os preços dos combustíveis.",
-};
-
-const getResponse = (q: string): string => {
-  const lower = q.toLowerCase();
-  if (lower.includes("taxa") || lower.includes("bna")) return MOCK_RESPONSES.taxa;
-  if (lower.includes("cólera") || lower.includes("colera")) return MOCK_RESPONSES.colera;
-  if (lower.includes("embaixada") || lower.includes("consulado")) return MOCK_RESPONSES.embaixada;
-  if (lower.includes("inflação") || lower.includes("inflacao")) return MOCK_RESPONSES.inflacao;
-  return MOCK_RESPONSES.default;
-};
 
 export const AIChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -41,9 +25,18 @@ export const AIChat = () => {
     setMessages((m) => [...m, userMsg]);
     setInput("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    setMessages((m) => [...m, { id: crypto.randomUUID(), role: "ai", text: getResponse(text) }]);
-    setLoading(false);
+    try {
+      const res = await api.post<{ answer: string }>("/weza", { message: text.trim() });
+      setMessages((m) => [...m, { id: crypto.randomUUID(), role: "ai", text: res.answer }]);
+    } catch (e) {
+      setMessages((m) => [...m, {
+        id: crypto.randomUUID(),
+        role: "ai",
+        text: (e as Error).message ?? "Não foi possível obter uma resposta. Tenta novamente.",
+      }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

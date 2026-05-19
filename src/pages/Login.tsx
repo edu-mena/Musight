@@ -22,8 +22,8 @@ export const Login = () => {
     try {
       await login(email, password);
       navigate("/app");
-    } catch {
-      setError("Erro ao entrar. Tenta novamente.");
+    } catch (e) {
+      setError((e as Error).message || "Erro ao entrar. Tenta novamente.");
     } finally {
       setLoading(false);
     }
@@ -82,9 +82,6 @@ export const Login = () => {
           </p>
         </div>
 
-        <p className="text-center text-xs text-white/40 mt-6">
-          Demo: usa qualquer email + password
-        </p>
       </div>
     </div>
   );

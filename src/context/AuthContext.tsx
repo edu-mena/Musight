@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
+import { api, type ApiUser } from "../lib/apiClient";
 
 export interface ExpertiseItem {
   topic: string;
@@ -11,7 +12,7 @@ export interface User {
   name: string;
   email: string;
   avatar: string;
-  role: "user" | "expert" | "researcher";
+  role: "user" | "expert" | "researcher" | "admin";
   joinedAt: string;
   contributions: number;
   debates: number;
@@ -24,8 +25,12 @@ export interface User {
   profession?: string;
   organization?: string;
   bio?: string;
+  website?: string;
+  linkedin?: string;
   // knowledge areas
   expertise?: ExpertiseItem[];
+  // researcher application
+  appliedForResearcher?: boolean;
 }
 
 interface AuthContextType {
@@ -34,67 +39,76 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
+  refreshUser: () => Promise<void>;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const MOCK_USERS: Record<string, User> = {
-  "demo@girassol.ao": {
-    id: "u1",
-    name: "Ana Silveira",
-    email: "demo@girassol.ao",
+// Transform API snake_case user → app camelCase User
+function transformUser(u: ApiUser): User {
+  return {
+    id: String(u.id),
+    name: u.name,
+    email: u.email,
     avatar: "",
-    role: "user",
-    joinedAt: "Janeiro 2026",
-    contributions: 14,
-    debates: 7,
-  },
-};
+    role: u.role as User["role"],
+    joinedAt: u.joinedAt ?? "",
+    contributions: u.contributions ?? 0,
+    debates: u.debates_count ?? 0,
+    verified: Boolean(u.verified),
+    bio: u.bio ?? undefined,
+    academicLevel: u.academic_level ?? undefined,
+    academicArea: u.academic_area ?? undefined,
+    institution: u.institution ?? undefined,
+    profession: u.profession ?? undefined,
+    organization: u.organization ?? undefined,
+    website: u.website ?? undefined,
+    linkedin: u.linkedin ?? undefined,
+    expertise: u.expertise ?? [],
+    appliedForResearcher: Boolean(u.applied_for_researcher),
+  };
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("girasightin_user");
-    if (saved) setUser(JSON.parse(saved));
-    setLoading(false);
+    const token = localStorage.getItem("girasightin_token");
+    if (!token) { setLoading(false); return; }
+    // Validate token by fetching current user
+    api.get<ApiUser>("/auth/me")
+      .then((u) => setUser(transformUser(u)))
+      .catch(() => {
+        localStorage.removeItem("girasightin_token");
+        localStorage.removeItem("girasightin_user");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  const login = async (email: string, _password: string) => {
-    await new Promise((r) => setTimeout(r, 800));
-    const found = MOCK_USERS[email.toLowerCase()] ?? {
-      id: crypto.randomUUID(),
-      name: email.split("@")[0],
-      email,
-      avatar: "",
-      role: "user" as const,
-      joinedAt: "Maio 2026",
-      contributions: 0,
-      debates: 0,
-    };
-    localStorage.setItem("girasightin_user", JSON.stringify(found));
-    setUser(found);
+  const login = async (email: string, password: string) => {
+    const data = await api.post<{ token: string; user: ApiUser }>(
+      "/auth/login", { email, password }
+    );
+    localStorage.setItem("girasightin_token", data.token);
+    const transformed = transformUser(data.user);
+    localStorage.setItem("girasightin_user", JSON.stringify(transformed));
+    setUser(transformed);
   };
 
-  const register = async (name: string, email: string, _password: string) => {
-    await new Promise((r) => setTimeout(r, 900));
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      name,
-      email,
-      avatar: "",
-      role: "user",
-      joinedAt: "Maio 2026",
-      contributions: 0,
-      debates: 0,
-    };
-    localStorage.setItem("girasightin_user", JSON.stringify(newUser));
-    setUser(newUser);
+  const register = async (name: string, email: string, password: string) => {
+    const data = await api.post<{ token: string; user: ApiUser }>(
+      "/auth/register", { name, email, password, terms_accepted: true }
+    );
+    localStorage.setItem("girasightin_token", data.token);
+    const transformed = transformUser(data.user);
+    localStorage.setItem("girasightin_user", JSON.stringify(transformed));
+    setUser(transformed);
   };
 
   const logout = () => {
+    localStorage.removeItem("girasightin_token");
     localStorage.removeItem("girasightin_user");
     setUser(null);
   };
@@ -106,8 +120,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(updated);
   };
 
+  const refreshUser = async () => {
+    const u = await api.get<ApiUser>("/auth/me");
+    const transformed = transformUser(u);
+    localStorage.setItem("girasightin_user", JSON.stringify(transformed));
+    setUser(transformed);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, refreshUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

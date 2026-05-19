@@ -1,31 +1,40 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import { articles } from "../../data/articles";
+import { api, type ApiArticle } from "../../lib/apiClient";
 import { TermTooltip } from "../../components/ui/TermTooltip";
 import { useAuth } from "../../context/AuthContext";
 import { AIResponseModal } from "../../components/ui/AIResponseModal";
-import { askAboutArticle } from "../../services/aiService";
 import { ChevronLeft, Headphones, Play, Pause, Bot, Send, ExternalLink, BookMarked, MessageSquareQuote } from "lucide-react";
+
+function Spinner() {
+  return <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto" />;
+}
 
 export const ArticleDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const article = articles.find((a) => a.id === id);
+  const [article, setArticle] = useState<ApiArticle | null>(null);
+  const [loading, setLoading] = useState(true);
   const [level, setLevel] = useState<"basico" | "intermedio" | "avancado">("basico");
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  useEffect(() => {
+    if (!id) return;
+    api.get<ApiArticle>(`/articles/${id}`)
+      .then(setArticle)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [id]);
+
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
+    if (isPlaying) { audio.pause(); } else { audio.play(); }
     setIsPlaying(!isPlaying);
   };
+
   const [question, setQuestion] = useState("");
   const [aiModal, setAiModal] = useState<{
     isOpen: boolean;
@@ -40,12 +49,19 @@ export const ArticleDetail = () => {
     setAiModal({ isOpen: true, loading: true, response: null, error: null, context: q });
     setQuestion("");
     try {
-      const text = await askAboutArticle(article, q.trim(), user?.name);
-      setAiModal((s) => ({ ...s, loading: false, response: text }));
+      const res = await api.post<{ answer: string }>("/weza", {
+        message: q.trim(),
+        article_id: article.id,
+      });
+      setAiModal((s) => ({ ...s, loading: false, response: res.answer }));
     } catch (e) {
       setAiModal((s) => ({ ...s, loading: false, error: (e as Error).message }));
     }
   };
+
+  if (loading) return (
+    <div className="px-4 py-8 flex justify-center"><Spinner /></div>
+  );
 
   if (!article) return (
     <div className="px-4 py-8 text-center">
@@ -54,12 +70,14 @@ export const ArticleDetail = () => {
     </div>
   );
 
-  const isOpinion = !article.references || article.references.length === 0;
-  const currentLevel = article.levels.find((l) => l.id === level)!;
+  const isOpinion = !article.references?.length;
+  const levels = article.levels ?? [];
+  const keyTerms = article.key_terms ?? [];
+  const currentLevel = levels.find((l) => l.id === level) ?? levels[0];
 
   const renderTextWithTerms = (text: string) => {
     const parts: (string | React.ReactElement)[] = [text];
-    article.keyTerms.forEach((kt) => {
+    keyTerms.forEach((kt) => {
       const result: (string | React.ReactElement)[] = [];
       parts.forEach((part) => {
         if (typeof part !== "string") { result.push(part); return; }
@@ -74,7 +92,11 @@ export const ArticleDetail = () => {
     return parts;
   };
 
-  const levelColors = { basico: "from-emerald-500 to-teal-600", intermedio: "from-primary to-orange-600", avancado: "from-violet-500 to-purple-700" };
+  const levelColors = {
+    basico: "from-emerald-500 to-teal-600",
+    intermedio: "from-primary to-orange-600",
+    avancado: "from-violet-500 to-purple-700",
+  };
 
   return (
     <>
@@ -102,71 +124,71 @@ export const ArticleDetail = () => {
         </div>
 
         {/* Audio */}
-        {article.audioAvailable && (
+        {article.has_audio && (
           <>
-            {article.audioSrc && (
-              <audio
-                ref={audioRef}
-                src={article.audioSrc}
-                onEnded={() => setIsPlaying(false)}
-              />
+            {article.audio_src && (
+              <audio ref={audioRef} src={article.audio_src} onEnded={() => setIsPlaying(false)} />
             )}
             <div className="rounded-2xl bg-gradient-primary p-4 flex items-center gap-4 text-white">
               <button
-                onClick={article.audioSrc ? togglePlay : undefined}
+                onClick={article.audio_src ? togglePlay : undefined}
                 className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 hover:bg-white/30 transition-colors"
               >
-                {isPlaying
-                  ? <Pause size={16} />
-                  : <Play size={16} className="ml-0.5" />}
+                {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
               </button>
               <div>
                 <div className="font-semibold text-sm flex items-center gap-1.5"><Headphones size={13} /> Girassol Lê</div>
-                <div className="text-white/70 text-xs">{article.audioDuration} · Narração em português</div>
+                <div className="text-white/70 text-xs">{article.audio_duration} · Narração em português</div>
               </div>
             </div>
           </>
         )}
 
         {/* Level selector */}
-        <div>
-          <p className="text-xs text-muted-foreground font-semibold mb-2">Nível de explicação</p>
-          <div className="flex gap-2">
-            {article.levels.map((l) => (
-              <button
-                key={l.id}
-                onClick={() => setLevel(l.id)}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-all ${level === l.id ? `bg-gradient-to-r ${levelColors[l.id]} text-white border-transparent` : "border-border text-muted-foreground"}`}
-              >
-                <div>{l.label}</div>
-                <div className="text-[9px] opacity-70 mt-0.5">{l.sublabel}</div>
-              </button>
-            ))}
+        {levels.length > 0 && (
+          <div>
+            <p className="text-xs text-muted-foreground font-semibold mb-2">Nível de explicação</p>
+            <div className="flex gap-2">
+              {levels.map((l) => (
+                <button
+                  key={l.id}
+                  onClick={() => setLevel(l.id)}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-all ${level === l.id ? `bg-gradient-to-r ${levelColors[l.id]} text-white border-transparent` : "border-border text-muted-foreground"}`}
+                >
+                  <div>{l.label}</div>
+                  <div className="text-[9px] opacity-70 mt-0.5">{l.sublabel}</div>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Article text with clickable terms */}
-        <div className="card-app p-5">
-          <div className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${levelColors[level]} mb-4`}>
-            {currentLevel.label}
+        {currentLevel && (
+          <div className="card-app p-5">
+            <div className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${levelColors[level]} mb-4`}>
+              {currentLevel.label}
+            </div>
+            <p className="text-base leading-relaxed font-display">
+              {renderTextWithTerms(currentLevel.text)}
+            </p>
           </div>
-          <p className="text-base leading-relaxed font-display">
-            {renderTextWithTerms(currentLevel.text)}
-          </p>
-        </div>
+        )}
 
         {/* Key terms glossary */}
-        <div>
-          <h2 className="font-display font-bold text-base mb-3">Glossário de termos</h2>
-          <div className="space-y-2">
-            {article.keyTerms.map((kt) => (
-              <div key={kt.term} className="card-app p-4">
-                <div className="font-semibold text-sm text-primary mb-1">{kt.term}</div>
-                <p className="text-sm text-muted-foreground leading-relaxed">{kt.definition}</p>
-              </div>
-            ))}
+        {keyTerms.length > 0 && (
+          <div>
+            <h2 className="font-display font-bold text-base mb-3">Glossário de termos</h2>
+            <div className="space-y-2">
+              {keyTerms.map((kt) => (
+                <div key={kt.term} className="card-app p-4">
+                  <div className="font-semibold text-sm text-primary mb-1">{kt.term}</div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{kt.definition}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* References or Opinion notice */}
         {isOpinion ? (
@@ -207,7 +229,7 @@ export const ArticleDetail = () => {
           </div>
         )}
 
-        {/* Ask AI */}
+        {/* Ask Weza */}
         <div className="card-app p-4 space-y-3">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center shrink-0">
@@ -216,7 +238,6 @@ export const ArticleDetail = () => {
             <p className="font-display font-bold text-sm">Perguntar à Weza</p>
           </div>
 
-          {/* Suggested questions */}
           <div className="flex flex-wrap gap-1.5">
             {[
               "Explica com um exemplo prático",
@@ -234,7 +255,6 @@ export const ArticleDetail = () => {
             ))}
           </div>
 
-          {/* Custom question input */}
           <div className="flex gap-2 items-end">
             <textarea
               value={question}
@@ -253,6 +273,12 @@ export const ArticleDetail = () => {
             </button>
           </div>
         </div>
+
+        {/* Author */}
+        <p className="text-[11px] text-muted-foreground text-center">
+          Por <span className="font-semibold">{article.author.name}</span>
+          {article.author.verified && <span className="ml-1 text-primary">✓</span>}
+        </p>
       </div>
     </div>
     <AIResponseModal

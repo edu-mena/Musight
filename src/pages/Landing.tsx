@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Navbar } from "../components/layout/Navbar";
-import { debates } from "../data/debates";
+
 import { MessageSquare, BookOpen, Bot, Headphones, Lock, ChevronRight, Users, Zap } from "lucide-react";
 
 const FEATURES = [
@@ -128,14 +128,14 @@ export const Landing = () => (
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <span className="pill bg-primary/10 text-primary">{debates[0].category}</span>
-                {debates[0].hot && <span className="pill bg-red-50 text-red-500">🔥 Em alta</span>}
+                <span className="pill bg-primary/10 text-primary">Economia</span>
+                <span className="pill bg-red-50 text-red-500">🔥 Em alta</span>
               </div>
-              <h3 className="font-display font-bold text-base leading-snug">{debates[0].title}</h3>
-              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{debates[0].summary}</p>
+              <h3 className="font-display font-bold text-base leading-snug">A subida dos combustíveis é inevitável?</h3>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Com os subsídios a serem progressivamente retirados, até onde podem ir os preços dos combustíveis em Angola?</p>
               <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Users size={12} />{debates[0].participants} participantes</span>
-                <span>{debates[0].experts} especialistas</span>
+                <span className="flex items-center gap-1"><Users size={12} />312 participantes</span>
+                <span>4 especialistas</span>
               </div>
             </div>
           </div>
@@ -143,15 +143,15 @@ export const Landing = () => (
           <div className="mt-4 pt-4 border-t border-border">
             <div className="flex gap-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shrink-0 flex items-center justify-center text-white text-xs font-bold">
-                {debates[0].comments[0].author[0]}
+                S
               </div>
               <div>
                 <div className="flex items-center gap-2 text-xs mb-1">
-                  <span className="font-bold">{debates[0].comments[0].author}</span>
-                  <span className="text-muted-foreground">{debates[0].comments[0].role}</span>
-                  {debates[0].comments[0].isExpert && <span className="pill bg-blue-50 text-blue-600 !py-0.5">Especialista</span>}
+                  <span className="font-bold">Sofia Nkosi</span>
+                  <span className="text-muted-foreground">Economista</span>
+                  <span className="pill bg-blue-50 text-blue-600 !py-0.5">Especialista</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{debates[0].comments[0].text}</p>
+                <p className="text-sm text-muted-foreground">A retirada dos subsídios é necessária para a sustentabilidade fiscal, mas o ritmo importa tanto quanto a decisão em si.</p>
               </div>
             </div>
           </div>
@@ -160,7 +160,10 @@ export const Landing = () => (
         {/* Remaining debates — blurred + lock */}
         <div className="relative">
           <div className="space-y-4 blur-sm pointer-events-none select-none">
-            {debates.slice(1, 3).map((d) => (
+            {[
+              { id: 1, category: "Política", title: "As autarquias vão mudar Angola?", participants: 198, experts: 3 },
+              { id: 2, category: "Saúde", title: "Sistema de saúde público: reforma urgente?", participants: 145, experts: 2 },
+            ].map((d) => (
               <div key={d.id} className="card-app p-5">
                 <span className="pill bg-primary/10 text-primary mb-2 inline-flex">{d.category}</span>
                 <h3 className="font-display font-bold text-base leading-snug">{d.title}</h3>

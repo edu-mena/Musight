@@ -6,7 +6,10 @@
       "Bash(Format-Table -AutoSize)",
       "Skill(claude-api)",
       "Skill(claude-api:*)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm install *)",
+      "Bash(Copy-Item \"c:\\\\Projects\\\\_Girasightin\\\\temp-pesquisador\\\\scholar-civic-space-main\\\\src\\\\data\\\\researcherData.ts\" \"c:\\\\Projects\\\\_Girasightin\\\\src\\\\data\\\\researcherData.ts\")",
+      "WebFetch(domain:darkslategray-heron-516839.hostingersite.com)"
     ]
   }
 }

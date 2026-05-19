@@ -26,8 +26,8 @@ export const Register = () => {
     try {
       await register(name, email, password);
       navigate("/app");
-    } catch {
-      setError("Erro ao criar conta. Tenta novamente.");
+    } catch (e) {
+      setError((e as Error).message || "Erro ao criar conta. Tenta novamente.");
     } finally {
       setLoading(false);
     }

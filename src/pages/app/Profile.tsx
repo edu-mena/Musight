@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import type { ExpertiseItem } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { api } from "../../lib/apiClient";
 import {
   User, MessageSquare, BookOpen, Bell, Shield, ChevronRight,
   LogOut, Edit2, FileText, GraduationCap, Briefcase, Plus, X, Check, PenLine,
 } from "lucide-react";
 import { WriterApplicationModal } from "../../components/ui/WriterApplicationModal";
+import { toast } from "sonner";
 
 const SETTINGS = [
   { icon: Bell, label: "Notificações", desc: "Debates e respostas" },
@@ -34,14 +36,13 @@ const LEVEL_COLORS: Record<ExpertiseItem["level"], string> = {
 };
 
 export const Profile = () => {
-  const { user, logout, updateProfile } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
 
-  // name edit
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(user?.name ?? "");
+  const [savingName, setSavingName] = useState(false);
 
-  // academic/professional edit
   const [editingInfo, setEditingInfo] = useState(false);
   const [academicLevel, setAcademicLevel] = useState(user?.academicLevel ?? "");
   const [academicArea, setAcademicArea] = useState(user?.academicArea ?? "");
@@ -49,29 +50,50 @@ export const Profile = () => {
   const [profession, setProfession] = useState(user?.profession ?? "");
   const [organization, setOrganization] = useState(user?.organization ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
+  const [savingInfo, setSavingInfo] = useState(false);
 
-  // writer application
   const [showWriterModal, setShowWriterModal] = useState(false);
-  const [writerSuccess, setWriterSuccess] = useState(false);
 
-  // expertise
   const [expertise, setExpertise] = useState<ExpertiseItem[]>(user?.expertise ?? []);
   const [addingTopic, setAddingTopic] = useState(false);
   const [newTopic, setNewTopic] = useState("");
   const [newLevel, setNewLevel] = useState<ExpertiseItem["level"]>("basico");
 
   const handleLogout = () => { logout(); navigate("/"); };
-
   const initials = user?.name?.split(" ").map((n) => n[0]).slice(0, 2).join("") ?? "?";
 
-  const saveName = () => {
-    if (name.trim()) updateProfile({ name: name.trim() });
-    setEditingName(false);
+  const saveName = async () => {
+    if (!name.trim()) return;
+    setSavingName(true);
+    try {
+      await api.put("/users/profile", { name: name.trim() });
+      await refreshUser();
+    } catch {
+      toast.error("Erro ao guardar nome.");
+    } finally {
+      setSavingName(false);
+      setEditingName(false);
+    }
   };
 
-  const saveInfo = () => {
-    updateProfile({ academicLevel, academicArea, institution, profession, organization, bio });
-    setEditingInfo(false);
+  const saveInfo = async () => {
+    setSavingInfo(true);
+    try {
+      await api.put("/users/profile", {
+        academic_level: academicLevel,
+        academic_area: academicArea,
+        institution,
+        profession,
+        organization,
+        bio,
+      });
+      await refreshUser();
+      setEditingInfo(false);
+    } catch {
+      toast.error("Erro ao guardar informação.");
+    } finally {
+      setSavingInfo(false);
+    }
   };
 
   const cancelInfo = () => {
@@ -84,36 +106,51 @@ export const Profile = () => {
     setEditingInfo(false);
   };
 
-  const addExpertise = () => {
+  const addExpertise = async () => {
     if (!newTopic) return;
     const updated = [...expertise, { topic: newTopic, level: newLevel }];
     setExpertise(updated);
-    updateProfile({ expertise: updated });
     setNewTopic("");
     setNewLevel("basico");
     setAddingTopic(false);
+    try {
+      await api.put("/users/profile", { expertise: updated });
+      await refreshUser();
+    } catch {
+      toast.error("Erro ao adicionar área.");
+      setExpertise(expertise);
+    }
   };
 
-  const handleWriterConfirm = (data: { focusArea: string; motivation: string; portfolioUrl: string }) => {
-    updateProfile({
-      role: "researcher",
-      profession: data.focusArea || user?.profession,
-      bio: data.motivation || user?.bio,
-      ...(data.portfolioUrl ? { organization: data.portfolioUrl } : {}),
-    });
-    setShowWriterModal(false);
-    setWriterSuccess(true);
-  };
-
-  const removeExpertise = (topic: string) => {
+  const removeExpertise = async (topic: string) => {
     const updated = expertise.filter((e) => e.topic !== topic);
     setExpertise(updated);
-    updateProfile({ expertise: updated });
+    try {
+      await api.put("/users/profile", { expertise: updated });
+      await refreshUser();
+    } catch {
+      toast.error("Erro ao remover área.");
+      setExpertise(expertise);
+    }
+  };
+
+  const handleWriterConfirm = async (data: { focusArea: string; motivation: string; portfolioUrl: string }) => {
+    try {
+      await api.post("/users/apply-researcher", {
+        focus_area: data.focusArea,
+        motivation: data.motivation,
+        portfolio_url: data.portfolioUrl || undefined,
+      });
+      await refreshUser();
+      setShowWriterModal(false);
+      toast.success("Candidatura submetida! A equipa irá rever em breve.");
+    } catch (e) {
+      toast.error((e as Error).message ?? "Erro ao submeter candidatura.");
+    }
   };
 
   const availableTopics = TOPICS.filter((t) => !expertise.find((e) => e.topic === t));
-
-  const hasInfo = academicLevel || profession || bio;
+  const hasInfo = (user?.academicLevel ?? academicLevel) || (user?.profession ?? profession) || (user?.bio ?? bio);
 
   return (
     <>
@@ -133,7 +170,9 @@ export const Profile = () => {
               className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold text-center outline-none focus:ring-2 focus:ring-primary/30"
               autoFocus
             />
-            <button onClick={saveName} className="text-xs text-primary font-semibold">Guardar</button>
+            <button onClick={saveName} disabled={savingName} className="text-xs text-primary font-semibold">
+              {savingName ? "…" : "Guardar"}
+            </button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
@@ -183,8 +222,8 @@ export const Profile = () => {
         <span className="pill bg-primary/10 text-primary">Gratuito</span>
       </div>
 
-      {/* Writer / Researcher application */}
-      {user?.role === "user" && !writerSuccess && (
+      {/* Writer application */}
+      {user?.role === "user" && !user.appliedForResearcher && (
         <button
           onClick={() => setShowWriterModal(true)}
           className="card-app w-full p-4 flex items-center gap-3 hover:bg-violet-50 transition-colors border border-violet-100 text-left"
@@ -200,12 +239,12 @@ export const Profile = () => {
         </button>
       )}
 
-      {writerSuccess && (
+      {user?.appliedForResearcher && user.role === "user" && (
         <div className="card-app p-4 flex items-center gap-3 bg-violet-50 border border-violet-200">
           <Check size={18} className="text-violet-600 shrink-0" />
           <div>
-            <p className="font-semibold text-sm text-violet-700">Candidatura submetida!</p>
-            <p className="text-xs text-muted-foreground">O teu perfil foi actualizado para Leitor / Pesquisador.</p>
+            <p className="font-semibold text-sm text-violet-700">Candidatura em análise</p>
+            <p className="text-xs text-muted-foreground">A equipa irá analisar o teu perfil em breve.</p>
           </div>
         </div>
       )}
@@ -236,80 +275,61 @@ export const Profile = () => {
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Área académica</label>
-              <input
-                value={academicArea}
-                onChange={(e) => setAcademicArea(e.target.value)}
-                placeholder="Ex: Direito, Economia, Medicina…"
-                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-              />
+              <input value={academicArea} onChange={(e) => setAcademicArea(e.target.value)} placeholder="Ex: Direito, Economia, Medicina…"
+                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Instituição</label>
-              <input
-                value={institution}
-                onChange={(e) => setInstitution(e.target.value)}
-                placeholder="Universidade ou escola"
-                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-              />
+              <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Universidade ou escola"
+                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div className="pt-1 border-t border-border">
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 mt-2">Profissão</label>
-              <input
-                value={profession}
-                onChange={(e) => setProfession(e.target.value)}
-                placeholder="Ex: Jornalista, Economista, Médico…"
-                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-              />
+              <input value={profession} onChange={(e) => setProfession(e.target.value)} placeholder="Ex: Jornalista, Economista, Médico…"
+                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Entidade / Organização</label>
-              <input
-                value={organization}
-                onChange={(e) => setOrganization(e.target.value)}
-                placeholder="Empresa, ONG, instituição…"
-                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-              />
+              <input value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="Empresa, ONG, instituição…"
+                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Breve bio</label>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value.slice(0, 220))}
-                placeholder="Descreve-te em poucas palavras…"
-                rows={3}
-                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-              />
+              <textarea value={bio} onChange={(e) => setBio(e.target.value.slice(0, 220))} placeholder="Descreve-te em poucas palavras…"
+                rows={3} className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
               <p className="text-right text-[10px] text-muted-foreground mt-0.5">{bio.length}/220</p>
             </div>
             <div className="flex gap-2 pt-1">
-              <button onClick={saveInfo} className="btn-primary flex-1 py-2 text-sm">Guardar</button>
+              <button onClick={saveInfo} disabled={savingInfo} className="btn-primary flex-1 py-2 text-sm">
+                {savingInfo ? "A guardar…" : "Guardar"}
+              </button>
               <button onClick={cancelInfo} className="flex-1 py-2 text-sm rounded-xl border border-border font-semibold hover:bg-secondary/50 transition-colors">Cancelar</button>
             </div>
           </div>
         ) : hasInfo ? (
           <div className="card-app p-4 space-y-3">
-            {academicLevel && (
+            {user?.academicLevel && (
               <div className="flex items-start gap-2.5">
                 <GraduationCap size={15} className="text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="text-xs text-muted-foreground">Habilitações</p>
-                  <p className="text-sm font-semibold">{academicLevel}{academicArea ? ` · ${academicArea}` : ""}</p>
-                  {institution && <p className="text-xs text-muted-foreground">{institution}</p>}
+                  <p className="text-sm font-semibold">{user.academicLevel}{user.academicArea ? ` · ${user.academicArea}` : ""}</p>
+                  {user.institution && <p className="text-xs text-muted-foreground">{user.institution}</p>}
                 </div>
               </div>
             )}
-            {profession && (
+            {user?.profession && (
               <div className="flex items-start gap-2.5">
                 <Briefcase size={15} className="text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="text-xs text-muted-foreground">Profissão</p>
-                  <p className="text-sm font-semibold">{profession}</p>
-                  {organization && <p className="text-xs text-muted-foreground">{organization}</p>}
+                  <p className="text-sm font-semibold">{user.profession}</p>
+                  {user.organization && <p className="text-xs text-muted-foreground">{user.organization}</p>}
                 </div>
               </div>
             )}
-            {bio && (
-              <p className="text-sm text-muted-foreground italic border-t border-border pt-3">"{bio}"</p>
+            {user?.bio && (
+              <p className="text-sm text-muted-foreground italic border-t border-border pt-3">"{user.bio}"</p>
             )}
           </div>
         ) : (
@@ -323,7 +343,7 @@ export const Profile = () => {
         )}
       </div>
 
-      {/* Expertise / Knowledge areas */}
+      {/* Expertise */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-display font-bold text-base">Áreas de Conhecimento</h3>
@@ -353,12 +373,8 @@ export const Profile = () => {
             <div className="card-app p-4 space-y-3 border-2 border-primary/20">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Área / Tópico</label>
-                <select
-                  value={newTopic}
-                  onChange={(e) => setNewTopic(e.target.value)}
-                  className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background"
-                  autoFocus
-                >
+                <select value={newTopic} onChange={(e) => setNewTopic(e.target.value)}
+                  className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background" autoFocus>
                   <option value="">Seleccionar área</option>
                   {availableTopics.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
@@ -367,37 +383,23 @@ export const Profile = () => {
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Nível de conhecimento</label>
                 <div className="flex gap-2">
                   {(["basico", "intermedio", "avancado"] as ExpertiseItem["level"][]).map((l) => (
-                    <button
-                      key={l}
-                      type="button"
-                      onClick={() => setNewLevel(l)}
-                      className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                        newLevel === l
-                          ? `${LEVEL_COLORS[l]} border-current`
-                          : "border-border text-muted-foreground hover:border-primary/40"
-                      }`}
-                    >
+                    <button key={l} type="button" onClick={() => setNewLevel(l)}
+                      className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${newLevel === l ? `${LEVEL_COLORS[l]} border-current` : "border-border text-muted-foreground hover:border-primary/40"}`}>
                       {LEVEL_LABELS[l]}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={addExpertise} disabled={!newTopic} className="btn-primary flex-1 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed">
-                  Adicionar
-                </button>
-                <button onClick={() => { setAddingTopic(false); setNewTopic(""); }} className="flex-1 py-2 text-sm rounded-xl border border-border font-semibold hover:bg-secondary/50 transition-colors">
-                  Cancelar
-                </button>
+                <button onClick={addExpertise} disabled={!newTopic} className="btn-primary flex-1 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed">Adicionar</button>
+                <button onClick={() => { setAddingTopic(false); setNewTopic(""); }} className="flex-1 py-2 text-sm rounded-xl border border-border font-semibold hover:bg-secondary/50 transition-colors">Cancelar</button>
               </div>
             </div>
           )}
 
           {expertise.length === 0 && !addingTopic && (
-            <button
-              onClick={() => setAddingTopic(true)}
-              className="card-app w-full p-4 flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors border-2 border-dashed border-border"
-            >
+            <button onClick={() => setAddingTopic(true)}
+              className="card-app w-full p-4 flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors border-2 border-dashed border-border">
               <Plus size={16} />
               <span className="text-sm">Adicionar área de conhecimento</span>
             </button>
@@ -421,10 +423,7 @@ export const Profile = () => {
               <ChevronRight size={15} className="text-muted-foreground" />
             </button>
           ))}
-          <button
-            onClick={() => navigate("/politicas")}
-            className="w-full flex items-center gap-3 p-4 hover:bg-secondary/50 transition-colors text-left"
-          >
+          <button onClick={() => navigate("/politicas")} className="w-full flex items-center gap-3 p-4 hover:bg-secondary/50 transition-colors text-left">
             <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center shrink-0">
               <FileText size={15} className="text-muted-foreground" />
             </div>

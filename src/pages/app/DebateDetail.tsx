@@ -1,18 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { debates, type Comment } from "../../data/debates";
+import { api, type ApiDebate, type ApiComment } from "../../lib/apiClient";
 import { ChevronLeft, ThumbsUp, Users, Send, Bot } from "lucide-react";
 import { AIResponseModal } from "../../components/ui/AIResponseModal";
 import { ContributionGuidelinesModal } from "../../components/ui/ContributionGuidelinesModal";
-import { analyzeDebate, analyzeComment } from "../../services/aiService";
+
+function Spinner() {
+  return <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto" />;
+}
+
+function isExpertComment(c: ApiComment) {
+  return c.author.role === "researcher" || c.author.role === "expert";
+}
 
 export const DebateDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const debate = debates.find((d) => d.id === id);
+  const [debate, setDebate] = useState<ApiDebate | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [localComments, setLocalComments] = useState<ApiComment[]>([]);
+  const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
   const [comment, setComment] = useState("");
   const [side, setSide] = useState<"favor" | "contra" | "neutro">("neutro");
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [filterType, setFilterType] = useState<"todos" | "especialistas" | "gerais">("todos");
   const [filterSide, setFilterSide] = useState<"todos" | "favor" | "neutro" | "contra">("todos");
@@ -27,6 +38,22 @@ export const DebateDetail = () => {
     context: string;
   }>({ isOpen: false, loading: false, response: null, error: null, context: "" });
 
+  useEffect(() => {
+    if (!id) return;
+    api.get<ApiDebate>(`/debates/${id}`)
+      .then((d) => {
+        setDebate(d);
+        setLocalComments(d.comments ?? []);
+        setLikedIds(new Set((d.comments ?? []).filter((c) => c.user_liked).map((c) => c.id)));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return (
+    <div className="px-4 py-8 flex justify-center"><Spinner /></div>
+  );
+
   if (!debate) return (
     <div className="px-4 py-8 text-center">
       <p className="text-muted-foreground">Debate não encontrado.</p>
@@ -34,9 +61,10 @@ export const DebateDetail = () => {
     </div>
   );
 
-  const filteredComments = debate.comments.filter((c) => {
-    if (filterType === "especialistas" && !c.isExpert) return false;
-    if (filterType === "gerais" && c.isExpert) return false;
+  const allComments = localComments;
+  const filteredComments = allComments.filter((c) => {
+    if (filterType === "especialistas" && !isExpertComment(c)) return false;
+    if (filterType === "gerais" && isExpertComment(c)) return false;
     if (filterSide !== "todos" && c.side !== filterSide) return false;
     return true;
   });
@@ -44,41 +72,75 @@ export const DebateDetail = () => {
   const openAI = (context: string) =>
     setAiModal({ isOpen: true, loading: true, response: null, error: null, context });
 
-  const closeAI = () =>
-    setAiModal((s) => ({ ...s, isOpen: false }));
+  const closeAI = () => setAiModal((s) => ({ ...s, isOpen: false }));
 
   const handleAnalyseDebate = async () => {
     openAI("Análise geral do debate");
     try {
-      const text = await analyzeDebate({
-        title: debate.title,
-        summary: debate.summary,
-        comments: debate.comments,
-      }, user?.name);
-      setAiModal((s) => ({ ...s, loading: false, response: text }));
+      const res = await api.post<{ answer: string }>("/weza", {
+        message: "Faz uma análise equilibrada deste debate: resume os principais argumentos de cada lado, identifica pontos de consenso e de discordância, e fornece contexto factual sobre o tema em Angola.",
+        debate_id: debate.id,
+      });
+      setAiModal((s) => ({ ...s, loading: false, response: res.answer }));
     } catch (e) {
       setAiModal((s) => ({ ...s, loading: false, error: (e as Error).message }));
     }
   };
 
-  const handleAnalyseComment = async (c: Comment) => {
-    openAI(`Análise do comentário de ${c.author.split(" ")[0]}`);
+  const handleAnalyseComment = async (c: ApiComment) => {
+    openAI(`Análise do comentário de ${c.author.name.split(" ")[0]}`);
     try {
-      const text = await analyzeComment(
-        { title: debate.title, summary: debate.summary, comments: debate.comments },
-        c,
-        user?.name
-      );
-      setAiModal((s) => ({ ...s, loading: false, response: text }));
+      const res = await api.post<{ answer: string }>("/weza", {
+        message: `Avalia este argumento no contexto do debate "${debate.title}": "${c.text}". Identifica pontos fortes, eventuais lacunas, e complementa com contexto factual angolano.`,
+        debate_id: debate.id,
+      });
+      setAiModal((s) => ({ ...s, loading: false, response: res.answer }));
     } catch (e) {
       setAiModal((s) => ({ ...s, loading: false, error: (e as Error).message }));
     }
   };
 
-  const handleSubmit = () => {
-    if (!comment.trim()) return;
-    setSubmitted(true);
-    setComment("");
+  const handleLike = async (c: ApiComment) => {
+    const alreadyLiked = likedIds.has(c.id);
+    setLikedIds((prev) => {
+      const next = new Set(prev);
+      if (alreadyLiked) { next.delete(c.id); } else { next.add(c.id); }
+      return next;
+    });
+    setLocalComments((prev) =>
+      prev.map((cm) => cm.id === c.id ? { ...cm, likes: cm.likes + (alreadyLiked ? -1 : 1) } : cm)
+    );
+    try {
+      await api.post<unknown>(`/comments/${c.id}/like`, {});
+    } catch {
+      // revert optimistic update on failure
+      setLikedIds((prev) => {
+        const next = new Set(prev);
+        if (alreadyLiked) { next.add(c.id); } else { next.delete(c.id); }
+        return next;
+      });
+      setLocalComments((prev) =>
+        prev.map((cm) => cm.id === c.id ? { ...cm, likes: cm.likes + (alreadyLiked ? 1 : -1) } : cm)
+      );
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!comment.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      const newComment = await api.post<ApiComment>(`/debates/${debate.id}/comments`, {
+        text: comment.trim(),
+        side,
+      });
+      setLocalComments((prev) => [...prev, newComment]);
+      setSubmitted(true);
+      setComment("");
+    } catch {
+      // leave the form open so the user can retry
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const sideColors = {
@@ -121,7 +183,6 @@ export const DebateDetail = () => {
 
           {/* Filters */}
           <div className="space-y-2 mb-4">
-            {/* Type filter */}
             <div className="flex gap-1.5">
               {(["todos", "especialistas", "gerais"] as const).map((t) => (
                 <button
@@ -137,7 +198,6 @@ export const DebateDetail = () => {
                 </button>
               ))}
             </div>
-            {/* Side filter */}
             <div className="flex gap-1.5">
               {(["todos", "favor", "neutro", "contra"] as const).map((s) => {
                 const active = filterSide === s;
@@ -165,35 +225,43 @@ export const DebateDetail = () => {
             {filteredComments.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-6">Nenhuma contribuição corresponde aos filtros.</p>
             )}
-            {filteredComments.map((c) => (
-              <div key={c.id} className={`card-app p-4 border-l-4 ${c.side === "favor" ? "border-l-emerald-400" : c.side === "contra" ? "border-l-red-400" : "border-l-border"}`}>
-                <div className="flex items-start gap-3">
-                  <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold ${c.isExpert ? "bg-gradient-primary" : "bg-muted"}`}>
-                    {c.isExpert ? c.author.split(" ").pop()?.[0] : c.author[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center flex-wrap gap-1.5 mb-1">
-                      <span className="font-bold text-xs">{c.author}</span>
-                      {c.isExpert && <span className="pill bg-blue-50 text-blue-600 !py-0.5 !px-2">Especialista</span>}
-                      <span className="text-[10px] text-muted-foreground ml-auto">{c.time}</span>
+            {filteredComments.map((c) => {
+              const expert = isExpertComment(c);
+              const liked = likedIds.has(c.id);
+              return (
+                <div key={c.id} className={`card-app p-4 border-l-4 ${c.side === "favor" ? "border-l-emerald-400" : c.side === "contra" ? "border-l-red-400" : "border-l-border"}`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold ${expert ? "bg-gradient-primary" : "bg-muted"}`}>
+                      {expert ? c.author.name.split(" ").pop()?.[0] : c.author.name[0]}
                     </div>
-                    <p className="text-xs text-muted-foreground italic mb-1">{c.role}</p>
-                    <p className="text-sm leading-relaxed">{c.text}</p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <ThumbsUp size={11} /> {c.likes}
-                      </span>
-                      <button
-                        onClick={() => handleAnalyseComment(c)}
-                        className="flex items-center gap-1 text-[10px] font-semibold text-primary hover:text-primary/80 transition-colors"
-                      >
-                        <Bot size={11} /> Consultar a Weza
-                      </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center flex-wrap gap-1.5 mb-1">
+                        <span className="font-bold text-xs">{c.author.name}</span>
+                        {expert && <span className="pill bg-blue-50 text-blue-600 !py-0.5 !px-2">Especialista</span>}
+                        {c.author.verified && <span className="text-primary text-[10px]">✓</span>}
+                        <span className="text-[10px] text-muted-foreground ml-auto">{c.time}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground italic mb-1 capitalize">{c.author.role}</p>
+                      <p className="text-sm leading-relaxed">{c.text}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <button
+                          onClick={() => handleLike(c)}
+                          className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-primary font-semibold" : "text-muted-foreground"}`}
+                        >
+                          <ThumbsUp size={11} /> {c.likes}
+                        </button>
+                        <button
+                          onClick={() => handleAnalyseComment(c)}
+                          className="flex items-center gap-1 text-[10px] font-semibold text-primary hover:text-primary/80 transition-colors"
+                        >
+                          <Bot size={11} /> Consultar a Weza
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -225,8 +293,12 @@ export const DebateDetail = () => {
               rows={3}
               className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-none"
             />
-            <button onClick={handleSubmit} disabled={!comment.trim()} className="btn-primary w-full !py-2.5">
-              <Send size={14} /> Contribuir
+            <button
+              onClick={handleSubmit}
+              disabled={!comment.trim() || submitting}
+              className="btn-primary w-full !py-2.5"
+            >
+              <Send size={14} /> {submitting ? "A enviar…" : "Contribuir"}
             </button>
           </div>
         )}
