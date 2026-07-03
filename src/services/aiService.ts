@@ -1,5 +1,6 @@
 import type { Comment } from "../data/debates";
 import type { Article } from "../data/articles";
+import { env } from "../lib/env";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "openai/gpt-oss-120b";
@@ -31,16 +32,18 @@ interface GroqResponse {
 }
 
 async function callGroq(systemPrompt: string, userPrompt: string): Promise<string> {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY as string | undefined;
+  const apiKey = env.VITE_GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error("Chave da API não configurada. Adiciona VITE_GROQ_API_KEY ao ficheiro .env.local.");
+    throw new Error(
+      "Chave da API não configurada. Adiciona VITE_GROQ_API_KEY ao ficheiro .env.local.",
+    );
   }
 
   const res = await fetch(GROQ_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: GROQ_MODEL,
@@ -53,7 +56,7 @@ async function callGroq(systemPrompt: string, userPrompt: string): Promise<strin
     }),
   });
 
-  const data = await res.json() as GroqResponse;
+  const data = (await res.json()) as GroqResponse;
 
   if (!res.ok || data.error) {
     throw new Error(data.error?.message ?? `Erro ${res.status} — tenta novamente mais tarde.`);
@@ -80,12 +83,12 @@ const SIDE_LABELS: Record<Comment["side"], string> = {
 
 export async function analyzeDebate(
   { title, summary, comments }: DebateContext,
-  userName?: string
+  userName?: string,
 ): Promise<string> {
   const commentLines = comments
     .map(
       (c) =>
-        `[${SIDE_LABELS[c.side]}] ${c.author}${c.isExpert ? " (Especialista)" : ""}: "${c.text}"`
+        `[${SIDE_LABELS[c.side]}] ${c.author}${c.isExpert ? " (Especialista)" : ""}: "${c.text}"`,
     )
     .join("\n\n");
 
@@ -105,7 +108,7 @@ Faz uma análise equilibrada: resume os principais argumentos de cada lado, iden
 export async function analyzeComment(
   { title, summary, comments }: DebateContext,
   comment: Comment,
-  userName?: string
+  userName?: string,
 ): Promise<string> {
   const others = comments
     .filter((c) => c.id !== comment.id)
@@ -131,14 +134,10 @@ Avalia este argumento: pontos fortes, eventuais lacunas, e como se enquadra no d
 export async function askAboutArticle(
   article: Article,
   question: string,
-  userName?: string
+  userName?: string,
 ): Promise<string> {
-  const levels = article.levels
-    .map((l) => `[${l.label}] ${l.text}`)
-    .join("\n\n");
-  const terms = article.keyTerms
-    .map((kt) => `${kt.term}: ${kt.definition}`)
-    .join("\n");
+  const levels = article.levels.map((l) => `[${l.label}] ${l.text}`).join("\n\n");
+  const terms = article.keyTerms.map((kt) => `${kt.term}: ${kt.definition}`).join("\n");
 
   const prompt = `Responde à seguinte questão sobre o artigo abaixo.
 

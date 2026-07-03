@@ -1,4 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? "";
+import { env } from "./env";
+
+const BASE_URL = env.VITE_API_URL;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -108,7 +110,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(!isFormData ? { "Content-Type": "application/json" } : {}),
-    ...(options.headers as Record<string, string> ?? {}),
+    ...((options.headers as Record<string, string>) ?? {}),
   };
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
@@ -140,9 +142,7 @@ export const api = {
 
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
 
-  postForm: <T>(path: string, form: FormData) =>
-    request<T>(path, { method: "POST", body: form }),
+  postForm: <T>(path: string, form: FormData) => request<T>(path, { method: "POST", body: form }),
 
-  putForm: <T>(path: string, form: FormData) =>
-    request<T>(path, { method: "PUT", body: form }),
+  putForm: <T>(path: string, form: FormData) => request<T>(path, { method: "PUT", body: form }),
 };
