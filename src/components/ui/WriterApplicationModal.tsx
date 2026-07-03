@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { PenLine, Globe, ArrowRight, CheckCircle2, X } from "lucide-react";
+import { writerApplicationSchema, type WriterApplicationInput } from "../../lib/validation/profile";
 
 interface Props {
   onConfirm: (data: { focusArea: string; motivation: string; portfolioUrl: string }) => void;
@@ -28,16 +31,22 @@ const COMMITMENTS = [
 
 export const WriterApplicationModal = ({ onConfirm, onClose }: Props) => {
   const [step, setStep] = useState<1 | 2>(1);
-  const [focusArea, setFocusArea] = useState("");
-  const [motivation, setMotivation] = useState("");
-  const [portfolioUrl, setPortfolioUrl] = useState("");
-  const [agreed, setAgreed] = useState(false);
 
-  const canSubmit = focusArea && motivation.trim().length >= 20 && agreed;
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useForm<WriterApplicationInput>({
+    resolver: zodResolver(writerApplicationSchema),
+    defaultValues: { focusArea: "", motivation: "", portfolioUrl: "", agreed: false },
+    mode: "onChange",
+  });
 
-  const handleSubmit = () => {
-    if (!canSubmit) return;
-    onConfirm({ focusArea, motivation, portfolioUrl });
+  const motivation = watch("motivation");
+
+  const onSubmit = (data: WriterApplicationInput) => {
+    onConfirm(data);
   };
 
   return (
@@ -72,8 +81,8 @@ export const WriterApplicationModal = ({ onConfirm, onClose }: Props) => {
                 Torna-te Leitor / Pesquisador
               </h2>
               <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                Como pesquisador podes publicar artigos e análises na plataforma.
-                O teu estatuto passa de simples leitor para voz activa na comunidade.
+                Como pesquisador podes publicar artigos e análises na plataforma. O teu estatuto
+                passa de simples leitor para voz activa na comunidade.
               </p>
 
               <div className="space-y-4 mb-6">
@@ -114,10 +123,14 @@ export const WriterApplicationModal = ({ onConfirm, onClose }: Props) => {
               </button>
             </div>
           ) : (
-            <div className="px-5 pt-2 pb-7 space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="px-5 pt-2 pb-7 space-y-4" noValidate>
               <div>
-                <p className="font-display font-bold text-lg leading-snug mb-0.5">A tua candidatura</p>
-                <p className="text-sm text-muted-foreground">Preenche os dados abaixo para concluir.</p>
+                <p className="font-display font-bold text-lg leading-snug mb-0.5">
+                  A tua candidatura
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Preenche os dados abaixo para concluir.
+                </p>
               </div>
 
               <div>
@@ -125,13 +138,19 @@ export const WriterApplicationModal = ({ onConfirm, onClose }: Props) => {
                   Área de foco principal *
                 </label>
                 <select
-                  value={focusArea}
-                  onChange={(e) => setFocusArea(e.target.value)}
                   className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-400/40 bg-background"
+                  {...register("focusArea")}
                 >
                   <option value="">Seleccionar área</option>
-                  {FOCUS_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+                  {FOCUS_AREAS.map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
                 </select>
+                {errors.focusArea && (
+                  <p className="text-xs text-destructive mt-1">{errors.focusArea.message}</p>
+                )}
               </div>
 
               <div>
@@ -139,13 +158,18 @@ export const WriterApplicationModal = ({ onConfirm, onClose }: Props) => {
                   Motivação *
                 </label>
                 <textarea
-                  value={motivation}
-                  onChange={(e) => setMotivation(e.target.value.slice(0, 280))}
                   placeholder="Por que queres publicar na GiraSightin? O que tens para contribuir? (mín. 20 caracteres)"
                   rows={4}
+                  maxLength={280}
                   className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-400/40 resize-none"
+                  {...register("motivation")}
                 />
-                <p className="text-right text-[10px] text-muted-foreground mt-0.5">{motivation.length}/280</p>
+                <p className="text-right text-[10px] text-muted-foreground mt-0.5">
+                  {motivation?.length ?? 0}/280
+                </p>
+                {errors.motivation && (
+                  <p className="text-xs text-destructive mt-1">{errors.motivation.message}</p>
+                )}
               </div>
 
               <div>
@@ -154,16 +178,20 @@ export const WriterApplicationModal = ({ onConfirm, onClose }: Props) => {
                   <span className="ml-1 text-muted-foreground/60 normal-case">(opcional)</span>
                 </label>
                 <input
-                  value={portfolioUrl}
-                  onChange={(e) => setPortfolioUrl(e.target.value)}
                   placeholder="https://..."
                   type="url"
                   className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-400/40"
+                  {...register("portfolioUrl")}
                 />
+                {errors.portfolioUrl && (
+                  <p className="text-xs text-destructive mt-1">{errors.portfolioUrl.message}</p>
+                )}
               </div>
 
               <div className="card-app p-4 space-y-3 bg-secondary/50">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">O teu compromisso editorial</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  O teu compromisso editorial
+                </p>
                 {COMMITMENTS.map((line) => (
                   <div key={line} className="flex items-start gap-2.5">
                     <CheckCircle2 size={14} className="text-violet-600 shrink-0 mt-0.5" />
@@ -174,33 +202,41 @@ export const WriterApplicationModal = ({ onConfirm, onClose }: Props) => {
 
               <label className="flex items-start gap-3 cursor-pointer">
                 <div className="relative mt-0.5 shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={agreed}
-                    onChange={(e) => setAgreed(e.target.checked)}
-                    className="sr-only peer"
-                  />
+                  <input type="checkbox" className="sr-only peer" {...register("agreed")} />
                   <div className="w-5 h-5 rounded-md border-2 border-border peer-checked:border-violet-600 peer-checked:bg-violet-600 transition-all flex items-center justify-center">
-                    {agreed && (
-                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                        <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
+                    <svg
+                      width="10"
+                      height="8"
+                      viewBox="0 0 10 8"
+                      fill="none"
+                      className="hidden peer-checked:block"
+                    >
+                      <path
+                        d="M1 4l3 3 5-6"
+                        stroke="white"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </div>
                 </div>
                 <span className="text-sm text-muted-foreground leading-snug">
                   Li e aceito o compromisso editorial acima descrito.
                 </span>
               </label>
+              {errors.agreed && (
+                <p className="text-xs text-destructive -mt-2">{errors.agreed.message}</p>
+              )}
 
               <button
-                onClick={handleSubmit}
-                disabled={!canSubmit}
+                type="submit"
+                disabled={!isValid}
                 className="w-full py-3 rounded-2xl bg-violet-600 text-white font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-violet-700 transition-colors"
               >
                 Submeter candidatura
               </button>
-            </div>
+            </form>
           )}
         </div>
       </div>

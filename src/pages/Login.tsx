@@ -1,31 +1,33 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../context/AuthContext";
 import { Logo } from "../components/layout/Logo";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { loginSchema, type LoginInput } from "../lib/validation/auth";
 
 export const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) { setError("Preenche todos os campos."); return; }
-    setLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginInput) => {
     setError("");
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       navigate("/app");
     } catch (e) {
       setError((e as Error).message || "Erro ao entrar. Tenta novamente.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -42,46 +44,55 @@ export const Login = () => {
         </div>
 
         <div className="card-app p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <div>
               <label className="block text-sm font-semibold mb-1.5">Email</label>
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="o.teu@email.com"
                 className="w-full rounded-xl border border-border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-semibold mb-1.5">Password</label>
               <div className="relative">
                 <input
                   type={showPw ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full rounded-xl border border-border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/40 transition-all pr-11"
+                  {...register("password")}
                 />
-                <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-destructive mt-1">{errors.password.message}</p>
+              )}
             </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
-              {loading ? <Loader2 size={16} className="animate-spin" /> : "Entrar"}
+            <button type="submit" disabled={isSubmitting} className="btn-primary w-full mt-2">
+              {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Entrar"}
             </button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-5">
             Não tens conta?{" "}
-            <Link to="/register" className="text-primary font-semibold hover:underline">Cria uma aqui</Link>
+            <Link to="/register" className="text-primary font-semibold hover:underline">
+              Cria uma aqui
+            </Link>
           </p>
         </div>
-
       </div>
     </div>
   );
