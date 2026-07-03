@@ -1,17 +1,41 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, Edit2, Check, GraduationCap, Briefcase, Globe, Link as LinkIcon, X, Plus } from "lucide-react";
+import {
+  ChevronLeft,
+  Edit2,
+  Check,
+  GraduationCap,
+  Briefcase,
+  Globe,
+  Link as LinkIcon,
+  X,
+  Plus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/AuthContext";
 import type { ExpertiseItem } from "../../context/AuthContext";
 import { api } from "../../lib/apiClient";
 import { levelMeta } from "../../data/researcherData";
+import { researcherProfileSchema } from "../../lib/validation/profile";
 
 function initials(name: string) {
-  return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }
 
-function Card({ title, icon: Icon, children }: { title: string; icon?: typeof Edit2; children: React.ReactNode }) {
+function Card({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon?: typeof Edit2;
+  children: React.ReactNode;
+}) {
   return (
     <div className="card-app p-4 space-y-3">
       <h3 className="font-display font-semibold flex items-center gap-2">
@@ -23,24 +47,49 @@ function Card({ title, icon: Icon, children }: { title: string; icon?: typeof Ed
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Field({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <div>
-      <label className="text-[10px] font-mono-accent text-muted-foreground uppercase">{label}</label>
-      <input value={value} onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 mt-1" />
+      <label className="text-[10px] font-mono-accent text-muted-foreground uppercase">
+        {label}
+      </label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 mt-1"
+      />
     </div>
   );
 }
 
-function FieldIcon({ icon: Icon, value, onChange, placeholder }: {
-  icon: typeof Globe; value: string; onChange: (v: string) => void; placeholder: string;
+function FieldIcon({
+  icon: Icon,
+  value,
+  onChange,
+  placeholder,
+}: {
+  icon: typeof Globe;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
 }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border">
       <Icon size={14} className="text-muted-foreground shrink-0" />
-      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-        className="flex-1 bg-transparent text-sm focus:outline-none" />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="flex-1 bg-transparent text-sm focus:outline-none"
+      />
     </div>
   );
 }
@@ -70,6 +119,7 @@ export const ResearcherProfile = () => {
   const [expertise, setExpertise] = useState<ExpertiseItem[]>(user?.expertise ?? []);
   const [newExp, setNewExp] = useState<ExpertiseItem>({ topic: "", level: "basico" });
   const [showExpForm, setShowExpForm] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const startEdit = () => {
     setBio(user?.bio ?? "");
@@ -84,21 +134,44 @@ export const ResearcherProfile = () => {
     setEditing(true);
   };
 
-  const cancel = () => { setEditing(false); setShowExpForm(false); };
+  const cancel = () => {
+    setEditing(false);
+    setShowExpForm(false);
+    setFieldErrors({});
+  };
 
   const save = async () => {
+    const result = researcherProfileSchema.safeParse({
+      bio,
+      academicLevel,
+      academicArea,
+      institution,
+      profession,
+      organization,
+      website,
+      linkedin,
+      expertise,
+    });
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      for (const issue of result.error.issues) errors[issue.path.join(".")] = issue.message;
+      setFieldErrors(errors);
+      toast.error(result.error.issues[0].message);
+      return;
+    }
+    setFieldErrors({});
     setSaving(true);
     try {
       await api.put("/users/profile", {
-        bio,
-        academic_level: academicLevel,
-        academic_area: academicArea,
-        institution,
-        profession,
-        organization,
-        website: website || null,
-        linkedin: linkedin || null,
-        expertise,
+        bio: result.data.bio,
+        academic_level: result.data.academicLevel,
+        academic_area: result.data.academicArea,
+        institution: result.data.institution,
+        profession: result.data.profession,
+        organization: result.data.organization,
+        website: result.data.website || null,
+        linkedin: result.data.linkedin || null,
+        expertise: result.data.expertise,
       });
       await refreshUser();
       setEditing(false);
@@ -116,12 +189,18 @@ export const ResearcherProfile = () => {
   return (
     <div className="pb-32">
       <header className="sticky top-0 z-20 h-14 px-4 flex items-center gap-2 border-b border-border bg-white/95 backdrop-blur-sm">
-        <Link to="/researcher" className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
+        <Link
+          to="/researcher"
+          className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
           <ChevronLeft size={18} /> Voltar
         </Link>
         <h1 className="flex-1 text-center font-display font-bold text-base">Perfil Público</h1>
         {!editing ? (
-          <button onClick={startEdit} className="text-violet-700 hover:bg-violet-50 p-2 rounded-lg transition-colors">
+          <button
+            onClick={startEdit}
+            className="text-violet-700 hover:bg-violet-50 p-2 rounded-lg transition-colors"
+          >
             <Edit2 size={16} />
           </button>
         ) : (
@@ -152,8 +231,17 @@ export const ResearcherProfile = () => {
         {/* Sobre mim */}
         <Card title="Sobre mim">
           {editing ? (
-            <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3}
-              className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            <div>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              {fieldErrors.bio && (
+                <p className="text-xs text-destructive mt-1">{fieldErrors.bio}</p>
+              )}
+            </div>
           ) : (
             <p className="text-sm italic text-muted-foreground">"{user.bio || "Sem bio ainda."}"</p>
           )}
@@ -169,7 +257,10 @@ export const ResearcherProfile = () => {
             </div>
           ) : (
             <div className="text-sm space-y-1">
-              <p><span className="font-semibold">{user.academicLevel || "—"}</span>{user.academicArea ? ` · ${user.academicArea}` : ""}</p>
+              <p>
+                <span className="font-semibold">{user.academicLevel || "—"}</span>
+                {user.academicArea ? ` · ${user.academicArea}` : ""}
+              </p>
               <p className="text-muted-foreground">{user.institution || ""}</p>
             </div>
           )}
@@ -196,13 +287,18 @@ export const ResearcherProfile = () => {
             {expertise.map((e, i) => {
               const m = levelMeta[e.level];
               return (
-                <li key={i} className="flex items-center justify-between gap-2 p-3 rounded-xl bg-muted">
+                <li
+                  key={i}
+                  className="flex items-center justify-between gap-2 p-3 rounded-xl bg-muted"
+                >
                   <span className="font-semibold text-sm">{e.topic}</span>
                   <div className="flex items-center gap-2">
                     <span className={`pill ${m.cls}`}>{m.label}</span>
                     {editing && (
-                      <button onClick={() => setExpertise(expertise.filter((_, j) => j !== i))}
-                        className="text-muted-foreground hover:text-red-600 transition-colors">
+                      <button
+                        onClick={() => setExpertise(expertise.filter((_, j) => j !== i))}
+                        className="text-muted-foreground hover:text-red-600 transition-colors"
+                      >
                         <X size={14} />
                       </button>
                     )}
@@ -211,30 +307,57 @@ export const ResearcherProfile = () => {
               );
             })}
           </ul>
-          {editing && (
-            showExpForm ? (
+          {editing &&
+            (showExpForm ? (
               <div className="mt-2 p-3 rounded-xl border border-border space-y-2">
-                <input value={newExp.topic} onChange={(e) => setNewExp({ ...newExp, topic: e.target.value })}
-                  placeholder="Área (ex: Educação)" className="w-full px-3 py-2 rounded-lg border border-border text-sm" />
-                <select value={newExp.level} onChange={(e) => setNewExp({ ...newExp, level: e.target.value as ExpertiseItem["level"] })}
-                  className="w-full px-3 py-2 rounded-lg border border-border text-sm">
+                <input
+                  value={newExp.topic}
+                  onChange={(e) => setNewExp({ ...newExp, topic: e.target.value })}
+                  placeholder="Área (ex: Educação)"
+                  className="w-full px-3 py-2 rounded-lg border border-border text-sm"
+                />
+                <select
+                  value={newExp.level}
+                  onChange={(e) =>
+                    setNewExp({ ...newExp, level: e.target.value as ExpertiseItem["level"] })
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-border text-sm"
+                >
                   <option value="basico">Básico</option>
                   <option value="intermedio">Intermédio</option>
                   <option value="avancado">Avançado</option>
                 </select>
                 <div className="flex gap-2 justify-end">
-                  <button onClick={() => { setShowExpForm(false); setNewExp({ topic: "", level: "basico" }); }}
-                    className="text-xs font-semibold text-muted-foreground px-3 py-1.5">Cancelar</button>
-                  <button onClick={() => { if (!newExp.topic.trim()) return; setExpertise([...expertise, newExp]); setNewExp({ topic: "", level: "basico" }); setShowExpForm(false); }}
-                    className="text-xs font-semibold text-white bg-violet-600 px-3 py-1.5 rounded-lg">Adicionar</button>
+                  <button
+                    onClick={() => {
+                      setShowExpForm(false);
+                      setNewExp({ topic: "", level: "basico" });
+                    }}
+                    className="text-xs font-semibold text-muted-foreground px-3 py-1.5"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!newExp.topic.trim()) return;
+                      setExpertise([...expertise, newExp]);
+                      setNewExp({ topic: "", level: "basico" });
+                      setShowExpForm(false);
+                    }}
+                    className="text-xs font-semibold text-white bg-violet-600 px-3 py-1.5 rounded-lg"
+                  >
+                    Adicionar
+                  </button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setShowExpForm(true)} className="btn-ghost w-full flex items-center justify-center gap-1 mt-2">
+              <button
+                onClick={() => setShowExpForm(true)}
+                className="btn-ghost w-full flex items-center justify-center gap-1 mt-2"
+              >
                 <Plus size={16} /> Adicionar área
               </button>
-            )
-          )}
+            ))}
         </Card>
 
         {/* Estatísticas públicas */}
@@ -250,20 +373,48 @@ export const ResearcherProfile = () => {
         <Card title="Ligações externas">
           {editing ? (
             <div className="space-y-2">
-              <FieldIcon icon={Globe} value={website} onChange={setWebsite} placeholder="https://..." />
-              <FieldIcon icon={LinkIcon} value={linkedin} onChange={setLinkedin} placeholder="https://linkedin.com/..." />
+              <div>
+                <FieldIcon
+                  icon={Globe}
+                  value={website}
+                  onChange={setWebsite}
+                  placeholder="https://..."
+                />
+                {fieldErrors.website && (
+                  <p className="text-xs text-destructive mt-1">{fieldErrors.website}</p>
+                )}
+              </div>
+              <div>
+                <FieldIcon
+                  icon={LinkIcon}
+                  value={linkedin}
+                  onChange={setLinkedin}
+                  placeholder="https://linkedin.com/..."
+                />
+                {fieldErrors.linkedin && (
+                  <p className="text-xs text-destructive mt-1">{fieldErrors.linkedin}</p>
+                )}
+              </div>
             </div>
           ) : (
             <div className="text-sm space-y-2">
               {user.website ? (
-                <a href={user.website} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-violet-700 hover:underline truncate">
+                <a
+                  href={user.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-violet-700 hover:underline truncate"
+                >
                   <Globe size={14} /> {user.website}
                 </a>
               ) : null}
               {user.linkedin ? (
-                <a href={user.linkedin} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-violet-700 hover:underline truncate">
+                <a
+                  href={user.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-violet-700 hover:underline truncate"
+                >
                   <LinkIcon size={14} /> {user.linkedin}
                 </a>
               ) : null}
@@ -277,7 +428,9 @@ export const ResearcherProfile = () => {
 
       {editing && (
         <footer className="fixed bottom-0 inset-x-0 md:left-60 z-20 border-t border-border bg-white/95 backdrop-blur-sm p-3 flex gap-2 mb-16 md:mb-0">
-          <button onClick={cancel} className="btn-ghost flex-1">Cancelar</button>
+          <button onClick={cancel} className="btn-ghost flex-1">
+            Cancelar
+          </button>
           <button onClick={save} disabled={saving} className="btn-primary flex-1">
             {saving ? "A guardar…" : "Guardar alterações"}
           </button>
