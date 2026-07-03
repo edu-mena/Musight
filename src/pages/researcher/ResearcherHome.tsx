@@ -1,12 +1,22 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Eye, FileText, MessageSquare, TrendingUp, PenLine, Lightbulb, ArrowRight } from "lucide-react";
+import {
+  Eye,
+  FileText,
+  MessageSquare,
+  TrendingUp,
+  PenLine,
+  Lightbulb,
+  ArrowRight,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { api, type ApiArticle, type ApiDebate } from "../../lib/apiClient";
 import { statusMeta } from "../../data/researcherData";
 
 function Spinner() {
-  return <div className="w-6 h-6 rounded-full border-2 border-violet-500 border-t-transparent animate-spin mx-auto" />;
+  return (
+    <div className="w-6 h-6 rounded-full border-2 border-violet-500 border-t-transparent animate-spin mx-auto" />
+  );
 }
 
 export const ResearcherHome = () => {
@@ -20,7 +30,10 @@ export const ResearcherHome = () => {
       api.get<ApiArticle[]>("/researcher/articles"),
       api.get<ApiDebate[]>("/researcher/debates"),
     ])
-      .then(([a, d]) => { setArticles(a); setDebates(d); })
+      .then(([a, d]) => {
+        setArticles(a);
+        setDebates(d);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -28,7 +41,8 @@ export const ResearcherHome = () => {
   const totalViews = articles.reduce((s, a) => s + (a.views ?? 0), 0);
   const totalPublished = articles.filter((a) => a.status === "publicado").length;
   const totalDebates = debates.filter((d) => d.status === "publicado").length;
-  const totalComments = articles.reduce((s, a) => s + (a.comment_count ?? 0), 0) +
+  const totalComments =
+    articles.reduce((s, a) => s + (a.comment_count ?? 0), 0) +
     debates.reduce((s, d) => s + (d.comment_count ?? 0), 0);
   const totalContent = articles.length + debates.length;
   const avgEngagement = totalContent > 0 ? Math.round(totalComments / totalContent) : 0;
@@ -57,8 +71,12 @@ export const ResearcherHome = () => {
           return (
             <div key={s.label} className="card-app p-4 flex flex-col gap-2">
               <Icon size={18} strokeWidth={1.8} className="text-violet-600" />
-              <div className="font-display font-bold text-2xl text-primary leading-none">{s.value}</div>
-              <div className="text-[10px] text-muted-foreground font-mono-accent uppercase">{s.label}</div>
+              <div className="font-display font-bold text-2xl text-primary leading-none">
+                {s.value}
+              </div>
+              <div className="text-[10px] text-muted-foreground font-mono-accent uppercase">
+                {s.label}
+              </div>
             </div>
           );
         })}
@@ -68,18 +86,28 @@ export const ResearcherHome = () => {
       <section>
         <div className="flex items-baseline justify-between mb-3">
           <h2 className="font-display font-bold text-lg">Os meus últimos conteúdos</h2>
-          <Link to="/researcher/conteudos" className="text-xs font-semibold text-violet-700 hover:underline flex items-center gap-0.5">
+          <Link
+            to="/researcher/conteudos"
+            className="text-xs font-semibold text-violet-700 hover:underline flex items-center gap-0.5"
+          >
             Ver tudo <ArrowRight size={12} />
           </Link>
         </div>
         {loading ? (
-          <div className="card-app p-6 flex justify-center"><Spinner /></div>
+          <div className="card-app p-6 flex justify-center">
+            <Spinner />
+          </div>
         ) : recent.length === 0 ? (
-          <div className="card-app p-6 text-center text-sm text-muted-foreground">Ainda não tens conteúdos publicados.</div>
+          <div className="card-app p-6 text-center text-sm text-muted-foreground">
+            Ainda não tens conteúdos publicados.
+          </div>
         ) : (
           <div className="space-y-3">
             {recent.map((a) => {
-              const st = statusMeta[a.status as keyof typeof statusMeta] ?? { label: a.status, cls: "bg-muted text-muted-foreground" };
+              const st = statusMeta[a.status as keyof typeof statusMeta] ?? {
+                label: a.status,
+                cls: "bg-muted text-muted-foreground",
+              };
               return (
                 <article key={a.id} className="card-app p-4 flex flex-col gap-2">
                   <div className="flex items-center justify-between gap-2">
@@ -87,12 +115,20 @@ export const ResearcherHome = () => {
                       <span className="pill bg-primary/10 text-primary">{a.category}</span>
                       <span className={`pill ${st.cls}`}>{st.label}</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground font-mono-accent shrink-0">{a.date}</span>
+                    <span className="text-[10px] text-muted-foreground font-mono-accent shrink-0">
+                      {a.date}
+                    </span>
                   </div>
                   <h3 className="font-semibold text-sm leading-snug">{a.title}</h3>
                   <div className="text-[10px] text-muted-foreground font-mono-accent flex items-center gap-3">
-                    <span className="flex items-center gap-1"><Eye size={11} />{a.views ?? 0}</span>
-                    <span className="flex items-center gap-1"><MessageSquare size={11} />{a.comment_count ?? 0}</span>
+                    <span className="flex items-center gap-1">
+                      <Eye size={11} />
+                      {a.views ?? 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MessageSquare size={11} />
+                      {a.comment_count ?? 0}
+                    </span>
                   </div>
                 </article>
               );
@@ -105,17 +141,25 @@ export const ResearcherHome = () => {
       <section>
         <h2 className="font-display font-bold text-lg mb-3">Acções rápidas</h2>
         <div className="grid sm:grid-cols-2 gap-3">
-          <Link to="/researcher/publicar-artigo" className="card-app p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+          <Link
+            to="/researcher/publicar-artigo"
+            className="card-app p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+          >
             <div className="w-12 h-12 rounded-xl bg-violet-100 grid place-items-center text-violet-700 shrink-0">
               <PenLine size={22} strokeWidth={1.8} />
             </div>
             <div className="flex-1">
               <div className="font-display font-semibold">Publicar artigo</div>
-              <div className="text-xs text-muted-foreground">Submete um novo artigo para revisão</div>
+              <div className="text-xs text-muted-foreground">
+                Submete um novo artigo para revisão
+              </div>
             </div>
             <ArrowRight size={18} className="text-muted-foreground shrink-0" />
           </Link>
-          <Link to="/researcher/criar-debate" className="card-app p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+          <Link
+            to="/researcher/criar-debate"
+            className="card-app p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+          >
             <div className="w-12 h-12 rounded-xl bg-violet-100 grid place-items-center text-violet-700 shrink-0">
               <MessageSquare size={22} strokeWidth={1.8} />
             </div>

@@ -27,14 +27,24 @@ import type { ReactNode } from "react";
 
 const Protected = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
 const ResearcherProtected = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "researcher" && user.role !== "expert") return <Navigate to="/app" replace />;
   return <>{children}</>;
@@ -42,7 +52,12 @@ const ResearcherProtected = ({ children }: { children: ReactNode }) => {
 
 const AdminProtected = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/app" replace />;
   return <>{children}</>;

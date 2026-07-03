@@ -40,13 +40,31 @@ export const articles: Article[] = [
     audioDuration: "8 min",
     audioSrc: "/artigos/audios/Estabilidade Monetária O BNA e a Protecção do Poder de Compra.mp3",
     references: [
-      { label: "BNA — Comunicado do Comité de Política Monetária, Maio 2026", url: "https://www.bna.ao" },
-      { label: "INE Angola — Índice de Preços no Consumidor, Abril 2026", url: "https://www.ine.gov.ao" },
+      {
+        label: "BNA — Comunicado do Comité de Política Monetária, Maio 2026",
+        url: "https://www.bna.ao",
+      },
+      {
+        label: "INE Angola — Índice de Preços no Consumidor, Abril 2026",
+        url: "https://www.ine.gov.ao",
+      },
     ],
     keyTerms: [
-      { term: "Taxa BNA", definition: "Principal instrumento de política monetária. Ao ajustá-la, o Banco Central sinaliza ao mercado o custo do dinheiro, visando controlar a liquidez e a inflação." },
-      { term: "Estabilidade de Preços", definition: "Objectivo primordial do Executivo para garantir que o salário das famílias angolanas mantenha o seu valor real ao longo do tempo." },
-      { term: "Comité de Política Monetária (CPM)", definition: "Órgão técnico do BNA que analisa indicadores globais e nacionais para tomar decisões que assegurem o equilíbrio macroeconómico." }
+      {
+        term: "Taxa BNA",
+        definition:
+          "Principal instrumento de política monetária. Ao ajustá-la, o Banco Central sinaliza ao mercado o custo do dinheiro, visando controlar a liquidez e a inflação.",
+      },
+      {
+        term: "Estabilidade de Preços",
+        definition:
+          "Objectivo primordial do Executivo para garantir que o salário das famílias angolanas mantenha o seu valor real ao longo do tempo.",
+      },
+      {
+        term: "Comité de Política Monetária (CPM)",
+        definition:
+          "Órgão técnico do BNA que analisa indicadores globais e nacionais para tomar decisões que assegurem o equilíbrio macroeconómico.",
+      },
     ],
     levels: [
       {
@@ -79,11 +97,22 @@ export const articles: Article[] = [
     audioDuration: "6 min",
     references: [
       { label: "MIREX — Nota à Imprensa: Inauguração do Consulado Geral em Ottawa, Março 2026" },
-      { label: "Convenção de Viena sobre Relações Consulares (1963)", url: "https://www.un.org/en/genocideprevention/documents/atrocity-crimes/Doc.23_Vienna%20Convention%20on%20Consular%20Relations.pdf" },
+      {
+        label: "Convenção de Viena sobre Relações Consulares (1963)",
+        url: "https://www.un.org/en/genocideprevention/documents/atrocity-crimes/Doc.23_Vienna%20Convention%20on%20Consular%20Relations.pdf",
+      },
     ],
     keyTerms: [
-      { term: "Diplomacia Económica", definition: "Estratégia do Executivo que utiliza as relações externas para atrair investimento estrangeiro e criar mercados para produtos angolanos." },
-      { term: "Protecção Consular", definition: "Dever do Estado em prestar assistência jurídica, administrativa e social aos angolanos que residem ou viajam pelo estrangeiro." },
+      {
+        term: "Diplomacia Económica",
+        definition:
+          "Estratégia do Executivo que utiliza as relações externas para atrair investimento estrangeiro e criar mercados para produtos angolanos.",
+      },
+      {
+        term: "Protecção Consular",
+        definition:
+          "Dever do Estado em prestar assistência jurídica, administrativa e social aos angolanos que residem ou viajam pelo estrangeiro.",
+      },
     ],
     levels: [
       {
@@ -114,8 +143,16 @@ export const articles: Article[] = [
     image: null,
     audioAvailable: false,
     keyTerms: [
-      { term: "Segurança Sanitária", definition: "Capacidade do Estado em detectar e responder rapidamente a ameaças de saúde pública para proteger a população." },
-      { term: "Saneamento Básico (PIIM)", definition: "Investimentos em infraestruturas de água e esgotos que o Executivo está a realizar em todo o país para erradicar doenças transmissíveis." },
+      {
+        term: "Segurança Sanitária",
+        definition:
+          "Capacidade do Estado em detectar e responder rapidamente a ameaças de saúde pública para proteger a população.",
+      },
+      {
+        term: "Saneamento Básico (PIIM)",
+        definition:
+          "Investimentos em infraestruturas de água e esgotos que o Executivo está a realizar em todo o país para erradicar doenças transmissíveis.",
+      },
     ],
     levels: [
       {
@@ -149,11 +186,22 @@ export const articles: Article[] = [
     references: [
       { label: "ANACIP — Relatório de Operacionalização AIAAN, 1.º Trimestre 2026" },
       { label: "Ministério dos Transportes — Plano Estratégico do Sector Aéreo 2025–2030" },
-      { label: "TAAG Angola Airlines — Comunicado de Imprensa, Abril 2026", url: "https://www.taag.com" },
+      {
+        label: "TAAG Angola Airlines — Comunicado de Imprensa, Abril 2026",
+        url: "https://www.taag.com",
+      },
     ],
     keyTerms: [
-      { term: "Hub Logístico", definition: "Ponto central de transporte que liga diferentes partes do mundo, gerando receitas através de taxas aeroportuárias e serviços de carga." },
-      { term: "ZEE", definition: "Zona Económica Especial - áreas com benefícios fiscais próximas a grandes infraestruturas para atrair fábricas e empresas." },
+      {
+        term: "Hub Logístico",
+        definition:
+          "Ponto central de transporte que liga diferentes partes do mundo, gerando receitas através de taxas aeroportuárias e serviços de carga.",
+      },
+      {
+        term: "ZEE",
+        definition:
+          "Zona Económica Especial - áreas com benefícios fiscais próximas a grandes infraestruturas para atrair fábricas e empresas.",
+      },
     ],
     levels: [
       {
@@ -185,14 +233,33 @@ export const articles: Article[] = [
     audioAvailable: true,
     audioDuration: "12 min",
     references: [
-      { label: "Ministério da Agricultura e Florestas — Plano Nacional de Desenvolvimento de Grãos 2025–2030", url: "https://www.minagri.gov.ao" },
+      {
+        label:
+          "Ministério da Agricultura e Florestas — Plano Nacional de Desenvolvimento de Grãos 2025–2030",
+        url: "https://www.minagri.gov.ao",
+      },
       { label: "Banco Mundial — Angola Agricultural Sector Review, 2025" },
-      { label: "FAO — Perspectivas de Colheitas e Situação Alimentar: Angola, Março 2026", url: "https://www.fao.org" },
+      {
+        label: "FAO — Perspectivas de Colheitas e Situação Alimentar: Angola, Março 2026",
+        url: "https://www.fao.org",
+      },
     ],
     keyTerms: [
-      { term: "Autossuficiência", definition: "Capacidade de um país produzir internamente tudo o que consome, eliminando a dependência de importações estrangeiras." },
-      { term: "Cadeia de Valor", definition: "O percurso total de um produto, desde a preparação do solo, colheita, processamento industrial até chegar à mesa do consumidor." },
-      { term: "Crédito Agrícola Bonificado", definition: "Empréstimos com taxas de juro muito baixas, suportadas pelo Estado, para incentivar os produtores a investir em máquinas e sementes." }
+      {
+        term: "Autossuficiência",
+        definition:
+          "Capacidade de um país produzir internamente tudo o que consome, eliminando a dependência de importações estrangeiras.",
+      },
+      {
+        term: "Cadeia de Valor",
+        definition:
+          "O percurso total de um produto, desde a preparação do solo, colheita, processamento industrial até chegar à mesa do consumidor.",
+      },
+      {
+        term: "Crédito Agrícola Bonificado",
+        definition:
+          "Empréstimos com taxas de juro muito baixas, suportadas pelo Estado, para incentivar os produtores a investir em máquinas e sementes.",
+      },
     ],
     levels: [
       {
@@ -224,8 +291,16 @@ export const articles: Article[] = [
     audioAvailable: true,
     audioDuration: "9 min",
     keyTerms: [
-      { term: "Transferência Monetária", definition: "Entrega directa de dinheiro às famílias mais pobres, permitindo que elas decidam como suprir as suas necessidades básicas." },
-      { term: "Inclusão Financeira", definition: "Processo de dar acesso a contas bancárias e serviços financeiros a pessoas que nunca tiveram contacto com bancos." },
+      {
+        term: "Transferência Monetária",
+        definition:
+          "Entrega directa de dinheiro às famílias mais pobres, permitindo que elas decidam como suprir as suas necessidades básicas.",
+      },
+      {
+        term: "Inclusão Financeira",
+        definition:
+          "Processo de dar acesso a contas bancárias e serviços financeiros a pessoas que nunca tiveram contacto com bancos.",
+      },
     ],
     levels: [
       {
@@ -257,12 +332,23 @@ export const articles: Article[] = [
     audioAvailable: false,
     references: [
       { label: "Governo de Angola — Acordo de Concessão Corredor do Lobito, 2024" },
-      { label: "SADC — Regional Infrastructure Development Master Plan, 2025", url: "https://www.sadc.int" },
+      {
+        label: "SADC — Regional Infrastructure Development Master Plan, 2025",
+        url: "https://www.sadc.int",
+      },
       { label: "Porto do Lobito — Relatório Anual de Operações 2025" },
     ],
     keyTerms: [
-      { term: "Intermodalidade", definition: "A combinação de diferentes meios de transporte (comboio, navio, camião) para mover mercadorias de forma rápida e barata." },
-      { term: "Parceria Público-Privada (PPP)", definition: "Contrato onde o Governo e empresas privadas trabalham juntos para gerir grandes infraestruturas, dividindo custos e lucros." },
+      {
+        term: "Intermodalidade",
+        definition:
+          "A combinação de diferentes meios de transporte (comboio, navio, camião) para mover mercadorias de forma rápida e barata.",
+      },
+      {
+        term: "Parceria Público-Privada (PPP)",
+        definition:
+          "Contrato onde o Governo e empresas privadas trabalham juntos para gerir grandes infraestruturas, dividindo custos e lucros.",
+      },
     ],
     levels: [
       {
@@ -286,6 +372,3 @@ export const articles: Article[] = [
     ],
   },
 ];
-
-
-  

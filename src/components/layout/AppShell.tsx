@@ -16,23 +16,31 @@ export const AppShell = ({ children, title }: { children: ReactNode; title?: str
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => { logout(); navigate("/"); };
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col bg-background relative">
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-border px-4 h-14 flex items-center justify-between shrink-0">
         <Logo size="sm" />
-        {title && <span className="font-display font-bold text-base absolute left-1/2 -translate-x-1/2">{title}</span>}
-        <button onClick={handleLogout} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+        {title && (
+          <span className="font-display font-bold text-base absolute left-1/2 -translate-x-1/2">
+            {title}
+          </span>
+        )}
+        <button
+          onClick={handleLogout}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
           Sair
         </button>
       </header>
 
       {/* Content */}
-      <main className="flex-1 pb-nav overflow-y-auto">
-        {children}
-      </main>
+      <main className="flex-1 pb-nav overflow-y-auto">{children}</main>
 
       {/* Bottom navigation */}
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-40 bg-white border-t border-border">

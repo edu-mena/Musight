@@ -90,10 +90,7 @@ export const ContributionGuidelinesModal = ({ step, onNext, onAgree }: Props) =>
             ))}
           </div>
 
-          <button
-            onClick={onAgree}
-            className="btn-primary w-full mt-5 !py-3"
-          >
+          <button onClick={onAgree} className="btn-primary w-full mt-5 !py-3">
             Concordo e quero contribuir
           </button>
         </div>

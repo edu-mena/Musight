@@ -1,5 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, PenLine, MessageSquare, User, ArrowLeft, Sparkles } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileText,
+  PenLine,
+  MessageSquare,
+  User,
+  ArrowLeft,
+  Sparkles,
+} from "lucide-react";
 import React from "react";
 import { Toaster } from "sonner";
 
@@ -78,9 +86,7 @@ export const ResearcherShell = ({ children }: { children: React.ReactNode }) => 
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 pb-20 md:pb-0">
-          {children}
-        </main>
+        <main className="flex-1 min-w-0 pb-20 md:pb-0">{children}</main>
       </div>
 
       {/* Mobile bottom nav */}

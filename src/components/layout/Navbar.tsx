@@ -6,7 +6,10 @@ export const Navbar = () => (
     <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
       <Logo />
       <div className="flex items-center gap-2">
-        <Link to="/login" className="text-sm font-semibold text-foreground/70 px-4 py-2 hover:text-foreground transition-colors">
+        <Link
+          to="/login"
+          className="text-sm font-semibold text-foreground/70 px-4 py-2 hover:text-foreground transition-colors"
+        >
           Entrar
         </Link>
         <Link to="/register" className="btn-primary !py-2 !px-5 !text-xs">

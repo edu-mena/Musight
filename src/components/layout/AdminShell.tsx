@@ -77,9 +77,7 @@ export const AdminShell = ({ children }: { children: React.ReactNode }) => {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 pb-20 md:pb-0">
-          {children}
-        </main>
+        <main className="flex-1 min-w-0 pb-20 md:pb-0">{children}</main>
       </div>
 
       {/* Mobile bottom nav */}

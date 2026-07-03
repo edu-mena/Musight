@@ -10,7 +10,10 @@ export const Policies = () => {
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col bg-background">
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-border px-4 h-14 flex items-center gap-3 shrink-0">
-        <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
           <ArrowLeft size={20} />
         </button>
         <Logo size="sm" />
@@ -33,11 +36,7 @@ export const Policies = () => {
           title="Documentação Legal GiraSightin"
         />
         <div className="px-4 py-3 text-center border-t border-border">
-          <a
-            href={PDF_SRC}
-            download
-            className="text-sm text-primary font-semibold hover:underline"
-          >
+          <a href={PDF_SRC} download className="text-sm text-primary font-semibold hover:underline">
             Descarregar documento completo (PDF)
           </a>
         </div>
