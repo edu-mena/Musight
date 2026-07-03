@@ -72,13 +72,14 @@ function transformUser(u: ApiUser): User {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(localStorage.getItem("girasightin_token")));
 
   useEffect(() => {
     const token = localStorage.getItem("girasightin_token");
-    if (!token) { setLoading(false); return; }
+    if (!token) return;
     // Validate token by fetching current user
-    api.get<ApiUser>("/auth/me")
+    api
+      .get<ApiUser>("/auth/me")
       .then((u) => setUser(transformUser(u)))
       .catch(() => {
         localStorage.removeItem("girasightin_token");
@@ -88,9 +89,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const data = await api.post<{ token: string; user: ApiUser }>(
-      "/auth/login", { email, password }
-    );
+    const data = await api.post<{ token: string; user: ApiUser }>("/auth/login", {
+      email,
+      password,
+    });
     localStorage.setItem("girasightin_token", data.token);
     const transformed = transformUser(data.user);
     localStorage.setItem("girasightin_user", JSON.stringify(transformed));
@@ -98,9 +100,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const data = await api.post<{ token: string; user: ApiUser }>(
-      "/auth/register", { name, email, password, terms_accepted: true }
-    );
+    const data = await api.post<{ token: string; user: ApiUser }>("/auth/register", {
+      name,
+      email,
+      password,
+      terms_accepted: true,
+    });
     localStorage.setItem("girasightin_token", data.token);
     const transformed = transformUser(data.user);
     localStorage.setItem("girasightin_user", JSON.stringify(transformed));
@@ -128,12 +133,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, refreshUser, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, register, logout, updateProfile, refreshUser, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook must live alongside its provider/context
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be inside AuthProvider");
