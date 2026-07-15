@@ -86,12 +86,20 @@ export const Login = () => {
             </button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground mt-5">
-            Não tens conta?{" "}
-            <Link to="/register" className="text-primary font-semibold hover:underline">
-              Cria uma aqui
+          <div className="text-center text-sm text-muted-foreground mt-5 space-y-2">
+            <Link
+              to="/auth/forgot-password"
+              className="text-primary font-semibold hover:underline block"
+            >
+              Esqueci-me da palavra-passe
             </Link>
-          </p>
+            <p>
+              Não tens conta?{" "}
+              <Link to="/register" className="text-primary font-semibold hover:underline">
+                Cria uma aqui
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

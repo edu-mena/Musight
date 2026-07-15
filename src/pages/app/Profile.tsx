@@ -213,7 +213,8 @@ export const Profile = () => {
     }
   };
 
-  const availableTopics = TOPICS.filter((t) => !expertise.find((e) => e.topic === t));
+  const safeExpertise = Array.isArray(expertise) ? expertise : [];
+  const availableTopics = TOPICS.filter((t) => !safeExpertise.find((e) => e.topic === t));
   const hasInfo =
     (user?.academicLevel ?? academicLevel) ||
     (user?.profession ?? profession) ||

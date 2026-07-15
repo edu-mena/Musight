@@ -29,7 +29,7 @@ export const Register = () => {
     setError("");
     try {
       await registerUser(data.name, data.email, data.password);
-      navigate("/app");
+      navigate("/verify-email", { state: { email: data.email } });
     } catch (e) {
       setError((e as Error).message || "Erro ao criar conta. Tenta novamente.");
     }

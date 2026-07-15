@@ -92,8 +92,8 @@ export const ArticleDetail = () => {
     );
 
   const isOpinion = !article.references?.length;
-  const levels = article.levels ?? [];
-  const keyTerms = article.keyTerms ?? [];
+  const levels = Array.isArray(article.levels) ? article.levels : [];
+  const keyTerms = Array.isArray(article.keyTerms) ? article.keyTerms : [];
   const currentLevel = levels.find((l) => l.level === level) ?? levels[0];
 
   const renderTextWithTerms = (text: string) => {

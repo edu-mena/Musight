@@ -29,7 +29,8 @@ export const Home = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const hotDebate = debates.find((d) => d.hot) ?? debates[0];
+  const safeDebates = Array.isArray(debates) ? debates : [];
+  const hotDebate = safeDebates.find((d) => d.hot) ?? safeDebates[0];
 
   return (
     <div className="px-4 py-5 space-y-6">

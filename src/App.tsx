@@ -3,6 +3,9 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Landing } from "./pages/Landing";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { VerifyEmail } from "./pages/auth/VerifyEmail";
+import { ForgotPassword } from "./pages/auth/ForgotPassword";
+import { ResetPassword } from "./pages/auth/ResetPassword";
 import { AppShell } from "./components/layout/AppShell";
 import { Home } from "./pages/app/Home";
 import { Debates } from "./pages/app/Debates";
@@ -114,6 +117,9 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
           <Route path="/politicas" element={<Policies />} />
           <Route path="/app/*" element={<AppLayout />} />
           <Route path="/researcher/*" element={<ResearcherLayout />} />
