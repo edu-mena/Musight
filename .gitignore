@@ -22,5 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-BACKEND_PROMPT.md
-BACKEND_PROMPT_EXPRESS.md
+.env*
+BACKEND_PROMPT
+BACKEND_PROMPT_EXPRESS
+BACKEND_*
+app.txt
+.prettierignore
+*.md
+README*
