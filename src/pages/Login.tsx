@@ -40,7 +40,7 @@ export const Login = () => {
             <Logo light />
           </div>
           <h1 className="font-display font-bold text-2xl text-white">Bem-vindo de volta</h1>
-          <p className="text-white/60 text-sm mt-1">Entra na tua conta GiraSightin</p>
+          <p className="text-white/60 text-sm mt-1">Entra na tua conta MuSight</p>
         </div>
 
         <div className="card-app p-6">

@@ -1,6 +1,6 @@
-# GiraSightin — Frontend
+# MuSight — Frontend
 
-React 19 + TypeScript + Vite frontend for GiraSightin. The backend (PHP + MySQL) lives outside this repo — see `BACKEND_PROMPT.md`.
+React 19 + TypeScript + Vite frontend for MuSight. The backend (PHP + MySQL) lives outside this repo — see `BACKEND_PROMPT.md`.
 
 ## Setup
 

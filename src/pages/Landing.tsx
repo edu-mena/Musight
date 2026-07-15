@@ -60,15 +60,10 @@ export const Landing = () => (
       <div className="absolute inset-0 bg-radial-amber" />
       <div className="relative max-w-6xl mx-auto px-5 py-20 grid lg:grid-cols-2 gap-14 items-center w-full">
         <div className="animate-fade-up text-white">
-          <span className="pill bg-white/10 border border-white/15 text-white mb-6">
-            🌻 Rede Girassol · App
-          </span>
           <h1 className="font-display font-bold text-5xl md:text-6xl leading-[1.0]">
-            Debate.
+            Compreenda o Mundo
             <br />
-            Aprende.
-            <br />
-            <span className="text-gradient">Compreende.</span>
+            <span className="text-gradient">ao ter redor.</span>
           </h1>
           <p className="mt-6 text-lg text-white/75 max-w-lg">
             O app que te explica Angola e o mundo ao teu nível. Debates com especialistas, artigos
@@ -103,9 +98,13 @@ export const Landing = () => (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-1.5 rounded-full bg-white/20" />
             <div className="p-4 pt-8 space-y-3">
               <div className="flex items-center gap-2 mb-4">
-                <img src="/favicon.png" className="h-6 w-6" alt="" />
+                <img
+                  src="/favicon.png"
+                  className="h-6 w-auto max-w-[96px] object-contain shrink-0"
+                  alt="MuSight"
+                />
                 <span className="font-display font-bold text-white text-sm">
-                  Gira<b>Sightin</b>
+                  Mu<b>Sight</b>
                 </span>
               </div>
               {/* Debate card preview */}
@@ -321,9 +320,13 @@ export const Landing = () => (
 
     <footer className="bg-surface-darker text-white/50 py-8 px-5 text-center text-sm">
       <div className="flex items-center justify-center gap-2 mb-3">
-        <img src="/favicon.png" className="h-6 w-6" alt="" />
+        <img
+          src="/favicon.png"
+          className="h-6 w-auto max-w-[96px] object-contain shrink-0"
+          alt="MuSight"
+        />
         <span className="font-display text-white">
-          Gira<b>Sightin</b>
+          Mu<b>Sight</b>
         </span>
       </div>
       <p>© {new Date().getFullYear()} Rede Girassol. Todos os direitos reservados.</p>

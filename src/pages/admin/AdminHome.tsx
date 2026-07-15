@@ -76,7 +76,7 @@ export const AdminHome = () => {
       <header className="space-y-1">
         <h1 className="font-display font-bold text-2xl md:text-3xl">Painel de Administração</h1>
         <p className="text-sm text-muted-foreground font-mono-accent">
-          Visão geral da plataforma GiraSightin
+          Visão geral da plataforma MuSight
         </p>
       </header>
 

@@ -25,7 +25,7 @@ export const AdminShell = ({ children }: { children: React.ReactNode }) => {
           <div className="w-8 h-8 rounded-lg bg-slate-800 grid place-items-center">
             <Shield size={16} className="text-white" strokeWidth={2} />
           </div>
-          <span className="font-display font-bold text-base">GiraSightin</span>
+          <span className="font-display font-bold text-base">MuSight</span>
         </Link>
         <span className="pill bg-slate-100 text-slate-700">Administrador</span>
       </header>
@@ -38,7 +38,7 @@ export const AdminShell = ({ children }: { children: React.ReactNode }) => {
               <div className="w-9 h-9 rounded-lg bg-slate-800 grid place-items-center">
                 <Shield size={18} className="text-white" strokeWidth={2} />
               </div>
-              <span className="font-display font-bold text-lg">GiraSightin</span>
+              <span className="font-display font-bold text-lg">MuSight</span>
             </Link>
             <span className="pill bg-slate-100 text-slate-700">Painel de Administração</span>
           </div>

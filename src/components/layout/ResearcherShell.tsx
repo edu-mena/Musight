@@ -34,7 +34,7 @@ export const ResearcherShell = ({ children }: { children: React.ReactNode }) => 
           <div className="w-8 h-8 rounded-lg bg-gradient-primary grid place-items-center">
             <Sparkles size={16} className="text-white" strokeWidth={2.2} />
           </div>
-          <span className="font-display font-bold text-base">GiraSightin</span>
+          <span className="font-display font-bold text-base">MuSight</span>
         </Link>
         <span className="pill bg-violet-100 text-violet-700">Pesquisador</span>
       </header>
@@ -47,7 +47,7 @@ export const ResearcherShell = ({ children }: { children: React.ReactNode }) => 
               <div className="w-9 h-9 rounded-lg bg-gradient-primary grid place-items-center">
                 <Sparkles size={18} className="text-white" strokeWidth={2.2} />
               </div>
-              <span className="font-display font-bold text-lg">GiraSightin</span>
+              <span className="font-display font-bold text-lg">MuSight</span>
             </Link>
             <span className="pill bg-violet-100 text-violet-700">Área de Pesquisador</span>
           </div>

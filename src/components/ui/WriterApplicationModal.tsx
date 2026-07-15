@@ -25,7 +25,7 @@ const FOCUS_AREAS = [
 const COMMITMENTS = [
   "Publico conteúdo baseado em factos verificáveis e com fontes identificadas.",
   "Identifico claramente quando se trata de opinião e não de reportagem.",
-  "Respeito os princípios editoriais e a comunidade GiraSightin.",
+  "Respeito os princípios editoriais e a comunidade MuSight.",
   "Aceito que o meu conteúdo seja revisto e, se necessário, removido pela equipa editorial.",
 ];
 
@@ -158,7 +158,7 @@ export const WriterApplicationModal = ({ onConfirm, onClose }: Props) => {
                   Motivação *
                 </label>
                 <textarea
-                  placeholder="Por que queres publicar na GiraSightin? O que tens para contribuir? (mín. 20 caracteres)"
+                  placeholder="Por que queres publicar na MuSight? O que tens para contribuir? (mín. 20 caracteres)"
                   rows={4}
                   maxLength={280}
                   className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-400/40 resize-none"

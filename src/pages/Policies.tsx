@@ -33,7 +33,7 @@ export const Policies = () => {
           src={PDF_SRC}
           className="flex-1 w-full border-0"
           style={{ minHeight: "calc(100vh - 3.5rem)" }}
-          title="Documentação Legal GiraSightin"
+          title="Documentação Legal MuSight"
         />
         <div className="px-4 py-3 text-center border-t border-border">
           <a href={PDF_SRC} download className="text-sm text-primary font-semibold hover:underline">
