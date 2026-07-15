@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Landing } from "./pages/Landing";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { ConfirmEmail } from "./pages/auth/ConfirmEmail";
 import { VerifyEmail } from "./pages/auth/VerifyEmail";
 import { ForgotPassword } from "./pages/auth/ForgotPassword";
 import { ResetPassword } from "./pages/auth/ResetPassword";
@@ -120,6 +121,7 @@ export default function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/auth/forgot-password" element={<ForgotPassword />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/confirm-email" element={<ConfirmEmail />} />
           <Route path="/politicas" element={<Policies />} />
           <Route path="/app/*" element={<AppLayout />} />
           <Route path="/researcher/*" element={<ResearcherLayout />} />
