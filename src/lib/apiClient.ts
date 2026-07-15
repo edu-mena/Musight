@@ -209,11 +209,17 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const json = await res.json();
 
   if (!json.success) {
-    if (res.status === 401) {
+    // Só força logout + redirect se havia uma sessão ativa que expirou.
+    // No próprio endpoint de login, um 401 só significa "senha errada" —
+    // não deve disparar navegação nenhuma, só mostrar o erro no formulário.
+    const isAuthEndpoint = path.startsWith("/auth/login") || path.startsWith("/auth/register");
+
+    if (res.status === 401 && token && !isAuthEndpoint) {
       localStorage.removeItem("girasightin_token");
       localStorage.removeItem("girasightin_user");
       window.location.href = "/login";
     }
+
     throw new Error(json.error ?? "Erro desconhecido");
   }
 
