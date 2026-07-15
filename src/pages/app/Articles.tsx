@@ -49,7 +49,7 @@ export const Articles = () => {
                   <span className="font-mono-accent text-[10px] uppercase text-primary">
                     {a.category}
                   </span>
-                  {!a.has_references && (
+                  {!a.references?.length && (
                     <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-semibold">
                       <MessageSquareQuote size={10} /> Opinião
                     </span>
@@ -60,13 +60,15 @@ export const Articles = () => {
                   <span className="pill bg-secondary text-muted-foreground !py-0.5 !px-2">
                     3 níveis
                   </span>
-                  {a.has_audio && (
+                  {a.hasAudio && (
                     <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
-                      <Headphones size={10} /> {a.audio_duration}
+                      <Headphones size={10} /> {a.audioDuration}
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-muted-foreground font-mono-accent mt-1">{a.date}</p>
+                <p className="text-[10px] text-muted-foreground font-mono-accent mt-1">
+                  {a.articleDate}
+                </p>
               </div>
               <ChevronRight size={16} className="text-muted-foreground shrink-0 self-center" />
             </Link>

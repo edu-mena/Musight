@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, X, ThumbsUp, Minus, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../lib/apiClient";
-import { CATEGORIES } from "../../data/researcherData";
+import { CATEGORIES, type Category } from "../../lib/constants/categories";
 import { debateSchema } from "../../lib/validation/content";
 
 type Stance = "favor" | "neutro" | "contra";
@@ -36,7 +36,7 @@ const stances: { id: Stance; label: string; icon: typeof ThumbsUp; cls: string; 
 export const PublishDebate = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState<Category>(CATEGORIES[0]);
   const [summary, setSummary] = useState("");
   const [stance, setStance] = useState<Stance>("neutro");
   const [argument, setArgument] = useState("");
@@ -86,8 +86,8 @@ export const PublishDebate = () => {
         category: result.data.category,
         summary: result.data.summary.trim(),
         stance: result.data.stance,
-        initial_argument: result.data.argument.trim(),
-        expert_tags: result.data.tags,
+        initialArgument: result.data.argument.trim(),
+        invitedExperts: result.data.tags,
       });
       toast.success("Debate submetido para revisão!");
       navigate("/researcher/conteudos");
@@ -131,7 +131,7 @@ export const PublishDebate = () => {
           </label>
           <select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => setCategory(e.target.value as Category)}
             className="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
           >
             {CATEGORIES.map((c) => (

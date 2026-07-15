@@ -62,14 +62,14 @@ export const ManageDebates = () => {
     if (!rejectReason.trim()) return;
     const reason = rejectReason;
     setItems((xs) =>
-      xs.map((x) => (x.id === id ? { ...x, status: "recusado", rejection_reason: reason } : x)),
+      xs.map((x) => (x.id === id ? { ...x, status: "recusado", rejectionReason: reason } : x)),
     );
     try {
       await api.put(`/admin/debates/${id}/reject`, { reason });
       toast("Debate rejeitado.", { description: "O autor será notificado." });
     } catch {
       setItems((xs) =>
-        xs.map((x) => (x.id === id ? { ...x, status: "em_revisao", rejection_reason: null } : x)),
+        xs.map((x) => (x.id === id ? { ...x, status: "em_revisao", rejectionReason: null } : x)),
       );
       toast.error("Erro ao rejeitar.");
     }
@@ -128,16 +128,16 @@ export const ManageDebates = () => {
                     </span>
                   </div>
                   <span className="text-[10px] text-muted-foreground font-mono-accent shrink-0">
-                    {d.date}
+                    {d.debateDate}
                   </span>
                 </div>
 
                 <h3 className="font-display font-semibold text-sm leading-snug">{d.title}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-3">{d.summary}</p>
                 <p className="text-[11px] text-muted-foreground font-mono-accent">
-                  Por <span className="font-semibold text-foreground">{d.author.name}</span> ·{" "}
-                  {d.author.role === "researcher" ? "Pesquisador" : "Especialista"}
-                  {d.author.verified && " ✓"}
+                  Por <span className="font-semibold text-foreground">{d.authorId}</span> ·{" "}
+                  {"Pesquisador"}
+                  {" ✓"}
                 </p>
 
                 {d.status === "em_revisao" &&
@@ -187,11 +187,11 @@ export const ManageDebates = () => {
                     </div>
                   ))}
 
-                {d.status === "recusado" && d.rejection_reason && (
+                {d.status === "recusado" && d.rejectionReason && (
                   <div className="p-2 rounded-lg bg-red-50 border border-red-100">
                     <p className="text-[11px] text-red-700">
                       <span className="font-semibold">Motivo: </span>
-                      {d.rejection_reason}
+                      {d.rejectionReason}
                     </p>
                   </div>
                 )}

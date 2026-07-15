@@ -139,8 +139,8 @@ export const Profile = () => {
     setSavingInfo(true);
     try {
       await api.put("/users/profile", {
-        academic_level: result.data.academicLevel,
-        academic_area: result.data.academicArea,
+        academicLevel: result.data.academicLevel,
+        academicArea: result.data.academicArea,
         institution: result.data.institution,
         profession: result.data.profession,
         organization: result.data.organization,
@@ -201,9 +201,9 @@ export const Profile = () => {
   }) => {
     try {
       await api.post("/users/apply-researcher", {
-        focus_area: data.focusArea,
+        focusArea: data.focusArea,
         motivation: data.motivation,
-        portfolio_url: data.portfolioUrl || undefined,
+        portfolioUrl: data.portfolioUrl || undefined,
       });
       await refreshUser();
       setShowWriterModal(false);

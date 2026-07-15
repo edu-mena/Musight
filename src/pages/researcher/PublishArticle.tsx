@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronDown, ChevronUp, X, Plus, Info } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../lib/apiClient";
-import { CATEGORIES } from "../../data/researcherData";
+import { CATEGORIES, type Category } from "../../lib/constants/categories";
 import { articleDraftSchema, articleSubmitSchema } from "../../lib/validation/content";
 
 type Level = "basico" | "intermedio" | "avancado";
@@ -70,7 +70,7 @@ export const PublishArticle = () => {
   const toggle = (k: keyof typeof openSec) => setOpenSec((s) => ({ ...s, [k]: !s[k] }));
 
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState<Category>(CATEGORIES[0]);
   const [excerpt, setExcerpt] = useState("");
   const [date, setDate] = useState(today);
 
@@ -99,11 +99,33 @@ export const PublishArticle = () => {
     form.append("title", title);
     form.append("category", category);
     form.append("excerpt", excerpt);
-    form.append("date", date);
-    form.append("content_basico", content.basico);
-    form.append("content_intermedio", content.intermedio);
-    form.append("content_avancado", content.avancado);
-    form.append("key_terms", JSON.stringify(terms));
+    form.append("articleDate", date);
+    form.append(
+      "levels",
+      JSON.stringify(
+        [
+          {
+            level: "basico",
+            label: "Básico",
+            sublabel: "Introdução ao tema",
+            content: content.basico,
+          },
+          {
+            level: "intermedio",
+            label: "Intermédio",
+            sublabel: "Visão prática",
+            content: content.intermedio,
+          },
+          {
+            level: "avancado",
+            label: "Avançado",
+            sublabel: "Análise técnica",
+            content: content.avancado,
+          },
+        ].filter((item) => item.content.trim().length > 0),
+      ),
+    );
+    form.append("keyTerms", JSON.stringify(terms));
     form.append("references", JSON.stringify(refs));
     form.append("status", isDraft ? "rascunho" : "em_revisao");
     return form;
@@ -203,7 +225,7 @@ export const PublishArticle = () => {
           {fieldErrors.title && <p className="text-xs text-destructive">{fieldErrors.title}</p>}
           <select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => setCategory(e.target.value as Category)}
             className="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
           >
             {CATEGORIES.map((c) => (

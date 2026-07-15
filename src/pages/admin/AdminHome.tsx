@@ -44,30 +44,30 @@ export const AdminHome = () => {
         {
           icon: Users,
           label: "Total utilizadores",
-          value: stats.total_users.toLocaleString("pt-PT"),
-          sub: `+${stats.users_this_month} este mês`,
+          value: stats.totalUsers.toLocaleString("pt-PT"),
+          sub: `+${stats.usersThisMonth} este mês`,
           alert: false,
         },
         {
           icon: FileText,
           label: "Artigos em revisão",
-          value: stats.articles_in_review,
-          alert: stats.articles_in_review > 0,
+          value: stats.articlesInReview,
+          alert: stats.articlesInReview > 0,
         },
         {
           icon: MessageSquare,
           label: "Debates em revisão",
-          value: stats.debates_in_review,
-          alert: stats.debates_in_review > 0,
+          value: stats.debatesInReview,
+          alert: stats.debatesInReview > 0,
         },
-        { icon: Globe, label: "Total publicados", value: stats.total_published, alert: false },
+        { icon: Globe, label: "Total publicados", value: stats.totalPublished, alert: false },
         {
           icon: UserCheck,
           label: "Candidaturas pendentes",
-          value: stats.pending_applications,
-          alert: stats.pending_applications > 0,
+          value: stats.pendingApplications,
+          alert: stats.pendingApplications > 0,
         },
-        { icon: TrendingUp, label: "Debates activos", value: stats.total_debates, alert: false },
+        { icon: TrendingUp, label: "Debates activos", value: stats.totalDebates, alert: false },
       ]
     : [];
 
@@ -142,7 +142,7 @@ export const AdminHome = () => {
                     <div className="flex items-center gap-2 mt-1">
                       <span className="pill bg-primary/10 text-primary">{a.category}</span>
                       <span className="text-[10px] text-muted-foreground font-mono-accent">
-                        {a.author.name}
+                        {a.authorId}
                       </span>
                     </div>
                   </div>
@@ -177,7 +177,7 @@ export const AdminHome = () => {
                     <div className="flex items-center gap-2 mt-1">
                       <span className="pill bg-violet-100 text-violet-700">{d.category}</span>
                       <span className="text-[10px] text-muted-foreground font-mono-accent">
-                        {d.author.name}
+                        {d.authorId}
                       </span>
                     </div>
                   </div>

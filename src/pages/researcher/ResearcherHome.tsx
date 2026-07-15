@@ -41,9 +41,7 @@ export const ResearcherHome = () => {
   const totalViews = articles.reduce((s, a) => s + (a.views ?? 0), 0);
   const totalPublished = articles.filter((a) => a.status === "publicado").length;
   const totalDebates = debates.filter((d) => d.status === "publicado").length;
-  const totalComments =
-    articles.reduce((s, a) => s + (a.comment_count ?? 0), 0) +
-    debates.reduce((s, d) => s + (d.comment_count ?? 0), 0);
+  const totalComments = debates.reduce((s, d) => s + (d.comments?.length ?? 0), 0);
   const totalContent = articles.length + debates.length;
   const avgEngagement = totalContent > 0 ? Math.round(totalComments / totalContent) : 0;
 
@@ -116,7 +114,7 @@ export const ResearcherHome = () => {
                       <span className={`pill ${st.cls}`}>{st.label}</span>
                     </div>
                     <span className="text-[10px] text-muted-foreground font-mono-accent shrink-0">
-                      {a.date}
+                      {a.articleDate}
                     </span>
                   </div>
                   <h3 className="font-semibold text-sm leading-snug">{a.title}</h3>
@@ -126,8 +124,7 @@ export const ResearcherHome = () => {
                       {a.views ?? 0}
                     </span>
                     <span className="flex items-center gap-1">
-                      <MessageSquare size={11} />
-                      {a.comment_count ?? 0}
+                      <MessageSquare size={11} />0
                     </span>
                   </div>
                 </article>

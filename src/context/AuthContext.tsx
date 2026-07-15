@@ -45,28 +45,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Transform API snake_case user → app camelCase User
 function transformUser(u: ApiUser): User {
   return {
     id: String(u.id),
     name: u.name,
     email: u.email,
-    avatar: "",
+    avatar: u.avatar ?? "",
     role: u.role as User["role"],
-    joinedAt: u.joinedAt ?? "",
+    joinedAt: u.createdAt ?? "",
     contributions: u.contributions ?? 0,
-    debates: u.debates_count ?? 0,
+    debates: u.debatesCount ?? 0,
     verified: Boolean(u.verified),
     bio: u.bio ?? undefined,
-    academicLevel: u.academic_level ?? undefined,
-    academicArea: u.academic_area ?? undefined,
+    academicLevel: u.academicLevel ?? undefined,
+    academicArea: u.academicArea ?? undefined,
     institution: u.institution ?? undefined,
     profession: u.profession ?? undefined,
     organization: u.organization ?? undefined,
     website: u.website ?? undefined,
     linkedin: u.linkedin ?? undefined,
     expertise: u.expertise ?? [],
-    appliedForResearcher: Boolean(u.applied_for_researcher),
+    appliedForResearcher: Boolean(u.appliedForResearcher),
   };
 }
 
@@ -104,7 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       name,
       email,
       password,
-      terms_accepted: true,
     });
     localStorage.setItem("girasightin_token", data.token);
     const transformed = transformUser(data.user);

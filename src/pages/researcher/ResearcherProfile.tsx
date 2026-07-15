@@ -164,8 +164,8 @@ export const ResearcherProfile = () => {
     try {
       await api.put("/users/profile", {
         bio: result.data.bio,
-        academic_level: result.data.academicLevel,
-        academic_area: result.data.academicArea,
+        academicLevel: result.data.academicLevel,
+        academicArea: result.data.academicArea,
         institution: result.data.institution,
         profession: result.data.profession,
         organization: result.data.organization,

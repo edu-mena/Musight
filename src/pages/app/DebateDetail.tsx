@@ -47,7 +47,7 @@ export const DebateDetail = () => {
       .then((d) => {
         setDebate(d);
         setLocalComments(d.comments ?? []);
-        setLikedIds(new Set((d.comments ?? []).filter((c) => c.user_liked).map((c) => c.id)));
+        setLikedIds(new Set((d.comments ?? []).filter((c) => c.userLiked).map((c) => c.id)));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -101,7 +101,7 @@ export const DebateDetail = () => {
     openAI(`Análise do comentário de ${c.author.name.split(" ")[0]}`);
     try {
       const res = await api.post<{ answer: string }>("/weza", {
-        message: `Avalia este argumento no contexto do debate "${debate.title}": "${c.text}". Identifica pontos fortes, eventuais lacunas, e complementa com contexto factual angolano.`,
+        message: `Avalia este argumento no contexto do debate "${debate.title}": "${c.content}". Identifica pontos fortes, eventuais lacunas, e complementa com contexto factual angolano.`,
         debate_id: debate.id,
       });
       setAiModal((s) => ({ ...s, loading: false, response: res.answer }));
@@ -195,7 +195,7 @@ export const DebateDetail = () => {
                 <Users size={11} />
                 {debate.participants} participantes
               </span>
-              <span>{debate.experts} especialistas</span>
+              <span>{debate.expertsCount} especialistas</span>
             </div>
             <button
               onClick={handleAnalyseDebate}
@@ -290,13 +290,13 @@ export const DebateDetail = () => {
                           )}
                           {c.author.verified && <span className="text-primary text-[10px]">✓</span>}
                           <span className="text-[10px] text-muted-foreground ml-auto">
-                            {c.time}
+                            {c.createdAt}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground italic mb-1 capitalize">
                           {c.author.role}
                         </p>
-                        <p className="text-sm leading-relaxed">{c.text}</p>
+                        <p className="text-sm leading-relaxed">{c.content}</p>
                         <div className="flex items-center justify-between mt-2">
                           <button
                             onClick={() => handleLike(c)}

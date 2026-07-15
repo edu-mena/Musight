@@ -219,7 +219,7 @@ export const MyContent = () => {
                     <span className={`pill ${st.cls}`}>{st.label}</span>
                   </div>
                   <span className="text-[10px] text-muted-foreground font-mono-accent shrink-0">
-                    {a.date}
+                    {a.articleDate}
                   </span>
                 </div>
                 <h3 className="font-display font-semibold text-sm leading-snug">{a.title}</h3>
@@ -232,10 +232,9 @@ export const MyContent = () => {
                     {a.views ?? 0}
                   </span>
                   <span className="flex items-center gap-1">
-                    <MessageSquare size={11} />
-                    {a.comment_count ?? 0}
+                    <MessageSquare size={11} />0
                   </span>
-                  {!a.has_references && (
+                  {!a.references?.length && (
                     <span className="pill bg-amber-100 text-amber-700 flex items-center gap-0.5">
                       <MessageSquareQuote size={10} /> Opinião
                     </span>
@@ -266,7 +265,7 @@ export const MyContent = () => {
                     <span className={`pill ${st.cls}`}>{st.label}</span>
                   </div>
                   <span className="text-[10px] text-muted-foreground font-mono-accent shrink-0">
-                    {d.date}
+                    {d.debateDate}
                   </span>
                 </div>
                 <h3 className="font-display font-semibold text-sm leading-snug">{d.title}</h3>
@@ -277,7 +276,7 @@ export const MyContent = () => {
                   </span>
                   <span className="flex items-center gap-1">
                     <MessageSquare size={11} />
-                    {d.comment_count ?? 0}
+                    {d.comments?.length ?? 0}
                   </span>
                 </div>
                 <ActionRow

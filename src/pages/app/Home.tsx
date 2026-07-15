@@ -85,7 +85,7 @@ export const Home = () => {
             <div className="flex items-center gap-2 mb-2">
               <span className="pill bg-primary/10 text-primary">{hotDebate.category}</span>
               <span className="text-[10px] text-muted-foreground font-mono-accent">
-                {hotDebate.date}
+                {hotDebate.debateDate}
               </span>
             </div>
             <h3 className="font-display font-bold text-base leading-snug">{hotDebate.title}</h3>
@@ -97,8 +97,8 @@ export const Home = () => {
                 <Users size={11} className="text-orange-500" />
                 {hotDebate.participants}
               </span>
-              <span>{hotDebate.experts} especialistas</span>
-              <span>{hotDebate.comment_count ?? 0} comentários</span>
+              <span>{hotDebate.expertsCount} especialistas</span>
+              <span>{hotDebate.comments?.length ?? 0} comentários</span>
             </div>
           </Link>
         ) : (
@@ -144,14 +144,14 @@ export const Home = () => {
                   </span>
                   <h3 className="font-display font-bold text-sm leading-snug mt-0.5">{a.title}</h3>
                   <div className="flex items-center gap-2 mt-1.5">
-                    {a.has_audio && (
+                    {a.hasAudio && (
                       <span className="flex items-center gap-1 text-[10px] text-orange-500 font-semibold">
                         <Headphones size={10} />
-                        Audio {a.audio_duration}
+                        Audio {a.audioDuration}
                       </span>
                     )}
                     <span className="text-[10px] text-muted-foreground font-mono-accent">
-                      {a.date}
+                      {a.articleDate}
                     </span>
                   </div>
                 </div>

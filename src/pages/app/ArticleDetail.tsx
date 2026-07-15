@@ -93,8 +93,8 @@ export const ArticleDetail = () => {
 
   const isOpinion = !article.references?.length;
   const levels = article.levels ?? [];
-  const keyTerms = article.key_terms ?? [];
-  const currentLevel = levels.find((l) => l.id === level) ?? levels[0];
+  const keyTerms = article.keyTerms ?? [];
+  const currentLevel = levels.find((l) => l.level === level) ?? levels[0];
 
   const renderTextWithTerms = (text: string) => {
     const parts: (string | React.ReactElement)[] = [text];
@@ -151,19 +151,19 @@ export const ArticleDetail = () => {
           <div>
             <h1 className="font-display font-bold text-xl leading-snug">{article.title}</h1>
             <p className="font-mono-accent text-[10px] uppercase text-muted-foreground mt-2">
-              {article.date}
+              {article.articleDate}
             </p>
           </div>
 
           {/* Audio */}
-          {article.has_audio && (
+          {article.hasAudio && (
             <>
-              {article.audio_src && (
-                <audio ref={audioRef} src={article.audio_src} onEnded={() => setIsPlaying(false)} />
+              {article.audioSrc && (
+                <audio ref={audioRef} src={article.audioSrc} onEnded={() => setIsPlaying(false)} />
               )}
               <div className="rounded-2xl bg-gradient-primary p-4 flex items-center gap-4 text-white">
                 <button
-                  onClick={article.audio_src ? togglePlay : undefined}
+                  onClick={article.audioSrc ? togglePlay : undefined}
                   className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 hover:bg-white/30 transition-colors"
                 >
                   {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
@@ -173,7 +173,7 @@ export const ArticleDetail = () => {
                     <Headphones size={13} /> Girassol Lê
                   </div>
                   <div className="text-white/70 text-xs">
-                    {article.audio_duration} · Narração em português
+                    {article.audioDuration} · Narração em português
                   </div>
                 </div>
               </div>
@@ -189,9 +189,9 @@ export const ArticleDetail = () => {
               <div className="flex gap-2">
                 {levels.map((l) => (
                   <button
-                    key={l.id}
-                    onClick={() => setLevel(l.id)}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-all ${level === l.id ? `bg-gradient-to-r ${levelColors[l.id]} text-white border-transparent` : "border-border text-muted-foreground"}`}
+                    key={l.level}
+                    onClick={() => setLevel(l.level)}
+                    className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-all ${level === l.level ? `bg-gradient-to-r ${levelColors[l.level]} text-white border-transparent` : "border-border text-muted-foreground"}`}
                   >
                     <div>{l.label}</div>
                     <div className="text-[9px] opacity-70 mt-0.5">{l.sublabel}</div>
@@ -210,7 +210,7 @@ export const ArticleDetail = () => {
                 {currentLevel.label}
               </div>
               <p className="text-base leading-relaxed font-display">
-                {renderTextWithTerms(currentLevel.text)}
+                {renderTextWithTerms(currentLevel.content)}
               </p>
             </div>
           )}
@@ -326,8 +326,7 @@ export const ArticleDetail = () => {
 
           {/* Author */}
           <p className="text-[11px] text-muted-foreground text-center">
-            Por <span className="font-semibold">{article.author.name}</span>
-            {article.author.verified && <span className="ml-1 text-primary">✓</span>}
+            Por <span className="font-semibold">{article.authorId}</span>
           </p>
         </div>
       </div>

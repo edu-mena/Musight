@@ -63,7 +63,7 @@ export const Debates = () => {
                   <span className="pill bg-primary/10 text-primary">{d.category}</span>
                   {d.hot && <span className="pill bg-red-50 text-red-500">🔥</span>}
                   <span className="text-[10px] text-muted-foreground font-mono-accent">
-                    {d.date}
+                    {d.debateDate}
                   </span>
                 </div>
                 <ChevronRight size={16} className="text-muted-foreground shrink-0 mt-1" />
@@ -77,8 +77,8 @@ export const Debates = () => {
                   <Users size={11} />
                   {d.participants}
                 </span>
-                <span>{d.experts} especialistas</span>
-                <span>{d.comment_count ?? 0} comentários</span>
+                <span>{d.expertsCount} especialistas</span>
+                <span>{d.comments?.length ?? 0} comentários</span>
               </div>
             </Link>
           ))}

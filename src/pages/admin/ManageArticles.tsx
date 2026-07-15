@@ -64,14 +64,14 @@ export const ManageArticles = () => {
     if (!rejectReason.trim()) return;
     const reason = rejectReason;
     setItems((xs) =>
-      xs.map((x) => (x.id === id ? { ...x, status: "recusado", rejection_reason: reason } : x)),
+      xs.map((x) => (x.id === id ? { ...x, status: "recusado", rejectionReason: reason } : x)),
     );
     try {
       await api.put(`/admin/articles/${id}/reject`, { reason });
       toast("Artigo rejeitado.", { description: "O autor será notificado." });
     } catch {
       setItems((xs) =>
-        xs.map((x) => (x.id === id ? { ...x, status: "em_revisao", rejection_reason: null } : x)),
+        xs.map((x) => (x.id === id ? { ...x, status: "em_revisao", rejectionReason: null } : x)),
       );
       toast.error("Erro ao rejeitar.");
     }
@@ -125,14 +125,14 @@ export const ManageArticles = () => {
                     >
                       {statusLabel[a.status] ?? a.status}
                     </span>
-                    {!a.has_references && (
+                    {!a.references?.length && (
                       <span className="pill bg-amber-100 text-amber-700 flex items-center gap-0.5">
                         <MessageSquareQuote size={10} /> Opinião
                       </span>
                     )}
                   </div>
                   <span className="text-[10px] text-muted-foreground font-mono-accent shrink-0">
-                    {a.date}
+                    {a.articleDate}
                   </span>
                 </div>
 
@@ -141,9 +141,9 @@ export const ManageArticles = () => {
                   <p className="text-xs text-muted-foreground line-clamp-2">{a.excerpt}</p>
                 )}
                 <p className="text-[11px] text-muted-foreground font-mono-accent">
-                  Por <span className="font-semibold text-foreground">{a.author.name}</span> ·{" "}
-                  {a.author.role === "researcher" ? "Pesquisador" : "Especialista"}
-                  {a.author.verified && " ✓"}
+                  Por <span className="font-semibold text-foreground">{a.authorId}</span> ·{" "}
+                  {"Pesquisador"}
+                  {" ✓"}
                 </p>
 
                 {a.status === "em_revisao" &&
@@ -193,11 +193,11 @@ export const ManageArticles = () => {
                     </div>
                   ))}
 
-                {a.status === "recusado" && a.rejection_reason && (
+                {a.status === "recusado" && a.rejectionReason && (
                   <div className="p-2 rounded-lg bg-red-50 border border-red-100">
                     <p className="text-[11px] text-red-700">
                       <span className="font-semibold">Motivo: </span>
-                      {a.rejection_reason}
+                      {a.rejectionReason}
                     </p>
                   </div>
                 )}

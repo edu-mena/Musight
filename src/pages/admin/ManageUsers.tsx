@@ -77,7 +77,7 @@ function UserCard({
     }
   };
 
-  const changeRole = async (role: string) => {
+  const changeRole = async (role: ApiUser["role"]) => {
     onUpdate(user.id, { role });
     try {
       await api.put(`/admin/users/${user.id}`, { role });
@@ -89,15 +89,15 @@ function UserCard({
   };
 
   const approveApplication = async () => {
-    onUpdate(user.id, { role: "researcher", applied_for_researcher: false });
+    onUpdate(user.id, { role: "researcher", appliedForResearcher: false });
     try {
       await api.put(`/admin/users/${user.id}`, {
         role: "researcher",
-        applied_for_researcher: false,
+        appliedForResearcher: false,
       });
       toast.success("Candidatura aprovada. Utilizador promovido a Pesquisador.");
     } catch {
-      onUpdate(user.id, { role: user.role, applied_for_researcher: user.applied_for_researcher });
+      onUpdate(user.id, { role: user.role, appliedForResearcher: user.appliedForResearcher });
       toast.error("Erro ao aprovar.");
     }
   };
@@ -142,19 +142,19 @@ function UserCard({
           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <span className={`pill ${rolePill}`}>{roleLabel}</span>
-            {user.applied_for_researcher && user.role === "user" && (
+            {user.appliedForResearcher && user.role === "user" && (
               <span className="pill bg-amber-100 text-amber-700 flex items-center gap-0.5">
                 <UserCheck size={10} /> Candidato
               </span>
             )}
           </div>
           <p className="text-[10px] text-muted-foreground font-mono-accent mt-1">
-            Aderiu {user.joinedAt} · {user.contributions} contrib. · {user.debates_count} debates
+            Aderiu {user.createdAt} · {user.contributions} contrib. · {user.debatesCount} debates
           </p>
         </div>
       </div>
 
-      {user.applied_for_researcher && user.role === "user" && (
+      {user.appliedForResearcher && user.role === "user" && (
         <div className="flex items-center gap-2 p-2 rounded-xl bg-amber-50 border border-amber-200">
           <UserCheck size={14} className="text-amber-700 shrink-0" />
           <p className="text-xs text-amber-800 flex-1">Candidatura a Pesquisador pendente</p>
@@ -173,7 +173,7 @@ function UserCard({
             <span>Papel:</span>
             <select
               value={user.role}
-              onChange={(e) => changeRole(e.target.value)}
+              onChange={(e) => changeRole(e.target.value as ApiUser["role"])}
               className="text-xs border border-border rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
             >
               <option value="user">Utilizador</option>
@@ -254,7 +254,7 @@ export const ManageUsers = () => {
       case "todos":
         return true;
       case "candidatos":
-        return !!u.applied_for_researcher && u.role === "user";
+        return !!u.appliedForResearcher && u.role === "user";
       case "suspensos":
         return u.suspended;
       default:
