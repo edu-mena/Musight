@@ -22,6 +22,14 @@ function Spinner() {
   );
 }
 
+// Garante que URLs vindas da API sempre tenham protocolo. O backend às vezes
+// devolve "host/caminho" sem "https://" na frente (visto em audioSrc/image),
+// o que faz o navegador tratar como caminho relativo e falhar ao carregar.
+function withProtocol(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
 export const ArticleDetail = () => {
   const { id } = useParams();
   const [article, setArticle] = useState<ApiArticle | null>(null);
@@ -32,9 +40,11 @@ export const ArticleDetail = () => {
 
   useEffect(() => {
     if (!id) return;
+    setLoading(true);
     api
-      .get<ApiArticle>(`/articles/${id}`)
-      .then(setArticle)
+      // GET /articles/:id devolve { article: {...} }, não o artigo direto
+      .get<{ article: ApiArticle }>(`/articles/${id}`)
+      .then((res) => setArticle(res.article))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [id]);
@@ -95,6 +105,8 @@ export const ArticleDetail = () => {
   const levels = Array.isArray(article.levels) ? article.levels : [];
   const keyTerms = Array.isArray(article.keyTerms) ? article.keyTerms : [];
   const currentLevel = levels.find((l) => l.level === level) ?? levels[0];
+  const coverImage = withProtocol(article.image);
+  const audioSrc = withProtocol(article.audioSrc);
 
   const renderTextWithTerms = (text: string) => {
     const parts: (string | React.ReactElement)[] = [text];
@@ -147,6 +159,19 @@ export const ArticleDetail = () => {
         </div>
 
         <div className="px-4 py-4 space-y-5">
+          {/* Cover image */}
+          {coverImage && (
+            <img
+              src={coverImage}
+              alt={article.title}
+              className="w-full aspect-video object-cover rounded-2xl bg-secondary"
+              onError={(e) => {
+                // esconde graciosamente se a imagem falhar em carregar
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+          )}
+
           {/* Title */}
           <div>
             <h1 className="font-display font-bold text-xl leading-snug">{article.title}</h1>
@@ -158,12 +183,12 @@ export const ArticleDetail = () => {
           {/* Audio */}
           {article.hasAudio && (
             <>
-              {article.audioSrc && (
-                <audio ref={audioRef} src={article.audioSrc} onEnded={() => setIsPlaying(false)} />
+              {audioSrc && (
+                <audio ref={audioRef} src={audioSrc} onEnded={() => setIsPlaying(false)} />
               )}
               <div className="rounded-2xl bg-gradient-primary p-4 flex items-center gap-4 text-white">
                 <button
-                  onClick={article.audioSrc ? togglePlay : undefined}
+                  onClick={audioSrc ? togglePlay : undefined}
                   className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 hover:bg-white/30 transition-colors"
                 >
                   {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
