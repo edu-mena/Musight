@@ -20,6 +20,9 @@ import {
   Check,
   PenLine,
   Mail,
+  Sprout,
+  Sparkles,
+  Award,
 } from "lucide-react";
 import { WriterApplicationModal } from "../../components/ui/WriterApplicationModal";
 import { toast } from "sonner";
@@ -58,10 +61,13 @@ const LEVEL_LABELS: Record<ExpertiseItem["level"], string> = {
   avancado: "Avançado",
 };
 
-const LEVEL_COLORS: Record<ExpertiseItem["level"], string> = {
-  basico: "bg-green-50 text-green-700 border-green-200",
-  intermedio: "bg-amber-50 text-amber-700 border-amber-200",
-  avancado: "bg-blue-50 text-blue-700 border-blue-200",
+// Mesma linguagem de "profundidade" usada no seletor de nível do Artigo:
+// um ícone crescente em vez de uma cor por nível. Assim "nível" significa
+// sempre a mesma coisa visualmente em toda a app.
+const LEVEL_ICONS: Record<ExpertiseItem["level"], typeof Sprout> = {
+  basico: Sprout,
+  intermedio: GraduationCap,
+  avancado: Sparkles,
 };
 
 export const Profile = () => {
@@ -247,7 +253,8 @@ export const Profile = () => {
   return (
     <>
       <div className="px-4 py-5 space-y-5">
-        {/* Avatar + name */}
+        {/* Avatar + nome — o gradiente laranja fica só aqui, é o único
+            momento "de assinatura" da página */}
         <div className="flex flex-col items-center gap-3 py-4">
           <div className="w-20 h-20 rounded-full bg-gradient-primary flex items-center justify-center text-white font-display font-bold text-2xl">
             {initials}
@@ -284,6 +291,9 @@ export const Profile = () => {
             </div>
           )}
           <p className="text-sm text-muted-foreground">{user?.email}</p>
+          {/* Verificado mantém verde (é um selo universal, mesma lógica do
+              "a favor" nos debates). Papel de conta (especialista/pesquisador)
+              passa a neutro + ícone, para não competir por cor com o selo. */}
           <div className="flex gap-2 flex-wrap justify-center">
             {user?.verified && (
               <span className="pill bg-green-50 text-green-700 border border-green-200 flex items-center gap-1">
@@ -291,30 +301,33 @@ export const Profile = () => {
               </span>
             )}
             {user?.role === "expert" && (
-              <span className="pill bg-blue-50 text-blue-600 border border-blue-100">
-                Especialista verificado
+              <span className="pill bg-secondary text-foreground border border-border flex items-center gap-1">
+                <Award size={11} /> Especialista verificado
               </span>
             )}
             {user?.role === "researcher" && (
-              <span className="pill bg-violet-50 text-violet-700 border border-violet-200">
-                Leitor / Pesquisador
+              <span className="pill bg-secondary text-foreground border border-border flex items-center gap-1">
+                <PenLine size={11} /> Leitor / Pesquisador
               </span>
             )}
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats — um único acento laranja em vez de 3 ícones laranja lado a lado */}
         <div className="card-app grid grid-cols-3 gap-0 overflow-hidden">
           {[
-            { icon: MessageSquare, n: user?.debates ?? 0, label: "Debates" },
-            { icon: User, n: user?.contributions ?? 0, label: "Contribuições" },
-            { icon: BookOpen, n: 3, label: "Artigos lidos" },
-          ].map(({ icon: Icon, n, label }, i) => (
+            { icon: MessageSquare, n: user?.debates ?? 0, label: "Debates", accent: true },
+            { icon: User, n: user?.contributions ?? 0, label: "Contribuições", accent: false },
+            { icon: BookOpen, n: 3, label: "Artigos lidos", accent: false },
+          ].map(({ icon: Icon, n, label, accent }, i) => (
             <div
               key={label}
               className={`flex flex-col items-center py-4 ${i < 2 ? "border-r border-border" : ""}`}
             >
-              <Icon size={16} className="text-primary mb-1" />
+              <Icon
+                size={16}
+                className={`mb-1 ${accent ? "text-primary" : "text-muted-foreground"}`}
+              />
               <div className="font-display font-bold text-xl">{n}</div>
               <div className="text-[10px] text-muted-foreground font-mono-accent uppercase mt-0.5">
                 {label}
@@ -323,7 +336,7 @@ export const Profile = () => {
           ))}
         </div>
 
-        {/* Member since */}
+        {/* Membro desde */}
         <div className="card-app p-4 flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground font-mono-accent uppercase tracking-wide">
@@ -331,41 +344,38 @@ export const Profile = () => {
             </p>
             <p className="font-semibold text-sm mt-0.5">{user?.joinedAt}</p>
           </div>
-          <span className="pill bg-primary/10 text-primary">Gratuito</span>
+          <span className="pill bg-secondary text-foreground">Gratuito</span>
         </div>
 
-        {/* Writer application */}
+        {/* Candidatura a Pesquisador — cartão escuro editorial, laranja só
+            no ícone de destaque, em vez de um bloco violeta isolado */}
         {user?.role === "user" && !user.appliedForResearcher && (
           <button
             onClick={() => setShowWriterModal(true)}
-            className="card-app w-full p-4 flex items-center gap-3 hover:bg-violet-50 transition-colors border border-violet-100 text-left"
+            className="w-full rounded-2xl bg-surface-dark p-4 flex items-center gap-3 hover:bg-surface-dark/90 transition-colors text-left"
           >
-            <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center shrink-0">
-              <PenLine size={17} className="text-violet-600" />
+            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+              <PenLine size={17} className="text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-sm text-violet-700">Candidatar-me a Pesquisador</p>
-              <p className="text-xs text-muted-foreground">
-                Publica artigos e análises na plataforma
-              </p>
+              <p className="font-semibold text-sm text-white">Candidatar-me a Pesquisador</p>
+              <p className="text-xs text-white/60">Publica artigos e análises na plataforma</p>
             </div>
-            <ChevronRight size={15} className="text-violet-400" />
+            <ChevronRight size={15} className="text-white/40" />
           </button>
         )}
 
         {user?.appliedForResearcher && user.role === "user" && (
-          <div className="card-app p-4 flex items-center gap-3 bg-violet-50 border border-violet-200">
-            <Check size={18} className="text-violet-600 shrink-0" />
+          <div className="rounded-2xl bg-surface-dark p-4 flex items-center gap-3">
+            <Check size={18} className="text-primary shrink-0" />
             <div>
-              <p className="font-semibold text-sm text-violet-700">Candidatura em análise</p>
-              <p className="text-xs text-muted-foreground">
-                A equipa irá analisar o teu perfil em breve.
-              </p>
+              <p className="font-semibold text-sm text-white">Candidatura em análise</p>
+              <p className="text-xs text-white/60">A equipa irá analisar o teu perfil em breve.</p>
             </div>
           </div>
         )}
 
-        {/* Academic & Professional */}
+        {/* Académico & Profissional */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display font-bold text-base">
@@ -482,7 +492,7 @@ export const Profile = () => {
             <div className="card-app p-4 space-y-3">
               {user?.academicLevel && (
                 <div className="flex items-start gap-2.5">
-                  <GraduationCap size={15} className="text-primary mt-0.5 shrink-0" />
+                  <GraduationCap size={15} className="text-muted-foreground mt-0.5 shrink-0" />
                   <div>
                     <p className="text-xs text-muted-foreground">Habilitações</p>
                     <p className="text-sm font-semibold">
@@ -497,7 +507,7 @@ export const Profile = () => {
               )}
               {user?.profession && (
                 <div className="flex items-start gap-2.5">
-                  <Briefcase size={15} className="text-primary mt-0.5 shrink-0" />
+                  <Briefcase size={15} className="text-muted-foreground mt-0.5 shrink-0" />
                   <div>
                     <p className="text-xs text-muted-foreground">Profissão</p>
                     <p className="text-sm font-semibold">{user.profession}</p>
@@ -524,7 +534,7 @@ export const Profile = () => {
           )}
         </div>
 
-        {/* Expertise */}
+        {/* Áreas de Conhecimento — mesmo sistema de ícone-por-profundidade do Artigo */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display font-bold text-base">Áreas de Conhecimento</h3>
@@ -539,24 +549,26 @@ export const Profile = () => {
           </div>
 
           <div className="space-y-2">
-            {expertise.map(({ topic, level }) => (
-              <div key={topic} className="card-app px-4 py-3 flex items-center justify-between">
-                <span className="text-sm font-semibold">{topic}</span>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${LEVEL_COLORS[level]}`}
-                  >
-                    {LEVEL_LABELS[level]}
-                  </span>
-                  <button
-                    onClick={() => removeExpertise(topic)}
-                    className="text-muted-foreground hover:text-destructive transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
+            {expertise.map(({ topic, level }) => {
+              const LevelIcon = LEVEL_ICONS[level];
+              return (
+                <div key={topic} className="card-app px-4 py-3 flex items-center justify-between">
+                  <span className="text-sm font-semibold">{topic}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-foreground">
+                      <LevelIcon size={11} className="text-primary" />
+                      {LEVEL_LABELS[level]}
+                    </span>
+                    <button
+                      onClick={() => removeExpertise(topic)}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {addingTopic && (
               <div className="card-app p-4 space-y-3 border-2 border-primary/20">
@@ -583,16 +595,25 @@ export const Profile = () => {
                     Nível de conhecimento
                   </label>
                   <div className="flex gap-2">
-                    {(["basico", "intermedio", "avancado"] as ExpertiseItem["level"][]).map((l) => (
-                      <button
-                        key={l}
-                        type="button"
-                        onClick={() => setNewLevel(l)}
-                        className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${newLevel === l ? `${LEVEL_COLORS[l]} border-current` : "border-border text-muted-foreground hover:border-primary/40"}`}
-                      >
-                        {LEVEL_LABELS[l]}
-                      </button>
-                    ))}
+                    {(["basico", "intermedio", "avancado"] as ExpertiseItem["level"][]).map((l) => {
+                      const LevelIcon = LEVEL_ICONS[l];
+                      const active = newLevel === l;
+                      return (
+                        <button
+                          key={l}
+                          type="button"
+                          onClick={() => setNewLevel(l)}
+                          className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all flex flex-col items-center gap-1 ${
+                            active
+                              ? "bg-surface-dark text-white border-transparent"
+                              : "border-border text-muted-foreground hover:border-foreground/30"
+                          }`}
+                        >
+                          <LevelIcon size={13} className={active ? "text-primary" : "opacity-60"} />
+                          {LEVEL_LABELS[l]}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -628,7 +649,7 @@ export const Profile = () => {
           </div>
         </div>
 
-        {/* Settings */}
+        {/* Definições */}
         <div>
           <h3 className="font-display font-bold text-base mb-3">Definições</h3>
           <div className="card-app overflow-hidden divide-y divide-border">
@@ -665,7 +686,7 @@ export const Profile = () => {
           </div>
         </div>
 
-        {/* Logout */}
+        {/* Terminar sessão */}
         <button
           onClick={handleLogout}
           className="w-full card-app p-4 flex items-center gap-3 text-destructive hover:bg-red-50 transition-colors"
@@ -688,8 +709,8 @@ export const Profile = () => {
       {showRequestReceivedModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-center">
-            <div className="w-14 h-14 rounded-full bg-violet-50 flex items-center justify-center mx-auto mb-4">
-              <Mail size={24} className="text-violet-600" />
+            <div className="w-14 h-14 rounded-full bg-surface-dark flex items-center justify-center mx-auto mb-4">
+              <Mail size={24} className="text-primary" />
             </div>
             <h3 className="font-display font-bold text-lg mb-2">Pedido recebido!</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">

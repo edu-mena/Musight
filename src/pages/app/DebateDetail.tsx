@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { api, type ApiDebate, type ApiComment } from "../../lib/apiClient";
-import { ChevronLeft, ThumbsUp, Users, Send, Bot } from "lucide-react";
+import { ChevronLeft, ThumbsUp, Users, Send, Bot, Award, MessageCircle } from "lucide-react";
 import { AIResponseModal } from "../../components/ui/AIResponseModal";
 import { ContributionGuidelinesModal } from "../../components/ui/ContributionGuidelinesModal";
 
@@ -168,51 +168,67 @@ export const DebateDetail = () => {
     }
   };
 
+  // Cor só onde carrega significado real (a favor / contra). O resto do
+  // sistema (filtros, badges) fica em tons neutros para não competir com isto.
   const sideColors = {
     favor: "bg-emerald-50 text-emerald-700 border-emerald-200",
     contra: "bg-red-50 text-red-700 border-red-200",
     neutro: "bg-secondary text-foreground border-border",
   };
+  const sideDot = {
+    favor: "bg-emerald-500",
+    contra: "bg-red-500",
+    neutro: "bg-muted-foreground",
+  };
 
   return (
     <>
       <div className="pb-4">
-        {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-border px-4 py-3 z-10">
+        {/* Header flutuante sobre o hero escuro */}
+        <div className="fixed top-0 left-0 right-0 z-20 px-4 py-3">
           <Link
             to="/app/debates"
-            className="flex items-center gap-1 text-sm text-muted-foreground mb-2"
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-black/30 text-white backdrop-blur-sm"
           >
-            <ChevronLeft size={15} /> Debates
+            <ChevronLeft size={17} />
           </Link>
-          <span className="pill bg-primary/10 text-primary">{debate.category}</span>
         </div>
 
-        <div className="px-4 py-4 space-y-5">
-          {/* Title + stats */}
-          <div>
-            <h1 className="font-display font-bold text-xl leading-snug">{debate.title}</h1>
-            <p className="text-sm text-muted-foreground mt-2">{debate.summary}</p>
-            <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Users size={11} />
-                {debate.participants} participantes
-              </span>
-              <span>{debate.expertsCount} especialistas</span>
-            </div>
-            <button
-              onClick={handleAnalyseDebate}
-              className="mt-4 flex items-center gap-2 btn-primary !py-2 !px-4 !text-xs w-fit"
-            >
-              <Bot size={13} /> Consultar a Weza sobre este debate
-            </button>
+        {/* Hero escuro — mesmo tratamento editorial do card em destaque na home */}
+        <div className="relative bg-surface-dark bg-radial-amber pt-16 pb-6 px-4 text-white">
+          <span className="pill bg-white/15 text-white border border-white/20">
+            {debate.category}
+          </span>
+          <h1 className="font-display font-bold text-xl leading-snug mt-3">{debate.title}</h1>
+          <p className="text-sm text-white/70 mt-2 leading-relaxed">{debate.summary}</p>
+          <div className="flex items-center gap-4 mt-4 text-xs text-white/60">
+            <span className="flex items-center gap-1">
+              <Users size={11} />
+              {debate.participants} participantes
+            </span>
+            <span className="flex items-center gap-1">
+              <Award size={11} />
+              {debate.expertsCount} especialistas
+            </span>
+            <span className="flex items-center gap-1">
+              <MessageCircle size={11} />
+              {allComments.length} contributos
+            </span>
           </div>
+          <button
+            onClick={handleAnalyseDebate}
+            className="mt-4 flex items-center gap-2 btn-primary !py-2 !px-4 !text-xs w-fit"
+          >
+            <Bot size={13} /> Consultar a Weza sobre este debate
+          </button>
+        </div>
 
-          {/* Comments */}
+        <div className="px-4 py-5 space-y-5">
+          {/* Comentários */}
           <div>
             <h2 className="font-display font-bold text-base mb-3">Contribuições</h2>
 
-            {/* Filters */}
+            {/* Filtros — tons neutros, não competem com o conteúdo */}
             <div className="space-y-2 mb-4">
               <div className="flex gap-1.5">
                 {(["todos", "especialistas", "gerais"] as const).map((t) => (
@@ -221,7 +237,7 @@ export const DebateDetail = () => {
                     onClick={() => setFilterType(t)}
                     className={`flex-1 py-1.5 rounded-xl text-[11px] font-semibold border transition-all capitalize ${
                       filterType === t
-                        ? "bg-foreground text-white border-transparent"
+                        ? "bg-surface-dark text-white border-transparent"
                         : "border-border text-muted-foreground hover:border-foreground/30"
                     }`}
                   >
@@ -232,24 +248,19 @@ export const DebateDetail = () => {
               <div className="flex gap-1.5">
                 {(["todos", "favor", "neutro", "contra"] as const).map((s) => {
                   const active = filterSide === s;
-                  const activeClass =
-                    s === "favor"
-                      ? "bg-emerald-500 text-white border-transparent"
-                      : s === "contra"
-                        ? "bg-red-500 text-white border-transparent"
-                        : s === "neutro"
-                          ? "bg-secondary text-foreground border-border"
-                          : "bg-foreground text-white border-transparent";
                   return (
                     <button
                       key={s}
                       onClick={() => setFilterSide(s)}
-                      className={`flex-1 py-1.5 rounded-xl text-[11px] font-semibold border transition-all ${
+                      className={`flex-1 py-1.5 rounded-xl text-[11px] font-semibold border transition-all flex items-center justify-center gap-1.5 ${
                         active
-                          ? activeClass
+                          ? "bg-surface-dark text-white border-transparent"
                           : "border-border text-muted-foreground hover:border-foreground/30"
                       }`}
                     >
+                      {s !== "todos" && (
+                        <span className={`w-1.5 h-1.5 rounded-full ${sideDot[s]}`} />
+                      )}
                       {s === "todos"
                         ? "Todos"
                         : s === "favor"
@@ -279,7 +290,7 @@ export const DebateDetail = () => {
                   >
                     <div className="flex items-start gap-3">
                       <div
-                        className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold ${expert ? "bg-gradient-primary" : "bg-muted"}`}
+                        className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold ${expert ? "bg-surface-dark" : "bg-muted"}`}
                       >
                         {expert ? c.author.name.split(" ").pop()?.[0] : c.author.name[0]}
                       </div>
@@ -287,8 +298,8 @@ export const DebateDetail = () => {
                         <div className="flex items-center flex-wrap gap-1.5 mb-1">
                           <span className="font-bold text-xs">{c.author.name}</span>
                           {expert && (
-                            <span className="pill bg-blue-50 text-blue-600 !py-0.5 !px-2">
-                              Especialista
+                            <span className="flex items-center gap-1 pill bg-secondary text-foreground !py-0.5 !px-2">
+                              <Award size={9} /> Especialista
                             </span>
                           )}
                           {c.author.verified && <span className="text-primary text-[10px]">✓</span>}
@@ -322,7 +333,7 @@ export const DebateDetail = () => {
             </div>
           </div>
 
-          {/* Add comment */}
+          {/* Adicionar contribuição */}
           {submitted ? (
             <div className="card-app p-4 text-center">
               <p className="font-semibold text-emerald-600">✓ Contribuição enviada!</p>

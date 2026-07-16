@@ -14,6 +14,10 @@ import {
   ExternalLink,
   BookMarked,
   MessageSquareQuote,
+  Sprout,
+  GraduationCap,
+  Sparkles,
+  ChevronDown,
 } from "lucide-react";
 
 function Spinner() {
@@ -30,12 +34,22 @@ function withProtocol(url: string | null | undefined): string | null {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
+// O nível não é uma categoria — é uma escala de profundidade. Um ícone
+// crescente comunica isso melhor do que 3 gradientes de cor desligados
+// entre si (verde/laranja/roxo), que competiam com o acento da marca.
+const levelIcons = {
+  basico: Sprout,
+  intermedio: GraduationCap,
+  avancado: Sparkles,
+};
+
 export const ArticleDetail = () => {
   const { id } = useParams();
   const [article, setArticle] = useState<ApiArticle | null>(null);
   const [loading, setLoading] = useState(true);
   const [level, setLevel] = useState<"basico" | "intermedio" | "avancado">("basico");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -131,73 +145,90 @@ export const ArticleDetail = () => {
     return parts;
   };
 
-  const levelColors = {
-    basico: "from-emerald-500 to-teal-600",
-    intermedio: "from-primary to-orange-600",
-    avancado: "from-violet-500 to-purple-700",
-  };
-
   return (
     <>
       <div className="pb-4">
-        {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-border px-4 py-3 z-10">
+        {/* Header — flutua sobre o hero em vez de empurrar o layout */}
+        <div className="fixed top-0 left-0 right-0 z-20 px-4 py-3 flex items-center justify-between">
           <Link
             to="/app/artigos"
-            className="flex items-center gap-1 text-sm text-muted-foreground mb-2"
+            className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors ${
+              coverImage
+                ? "bg-black/30 text-white"
+                : "bg-white/90 text-foreground border border-border"
+            }`}
           >
-            <ChevronLeft size={15} /> Artigos
+            <ChevronLeft size={17} />
           </Link>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="pill bg-primary/10 text-primary">{article.category}</span>
-            {isOpinion && (
-              <span className="flex items-center gap-1 pill bg-amber-50 text-amber-700 border border-amber-200">
-                <MessageSquareQuote size={11} /> Opinião
-              </span>
-            )}
-          </div>
         </div>
 
-        <div className="px-4 py-4 space-y-5">
-          {/* Cover image */}
-          {coverImage && (
+        {/* Hero — a imagem carrega o peso visual que antes estava no player laranja */}
+        {coverImage ? (
+          <div className="relative w-full aspect-[4/5] bg-surface-dark">
             <img
               src={coverImage}
               alt={article.title}
-              className="w-full aspect-video object-cover rounded-2xl bg-secondary"
+              className="absolute inset-0 w-full h-full object-cover"
               onError={(e) => {
-                // esconde graciosamente se a imagem falhar em carregar
                 (e.currentTarget as HTMLImageElement).style.display = "none";
               }}
             />
-          )}
-
-          {/* Title */}
-          <div>
-            <h1 className="font-display font-bold text-xl leading-snug">{article.title}</h1>
-            <p className="font-mono-accent text-[10px] uppercase text-muted-foreground mt-2">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
+            <div className="absolute bottom-0 left-0 right-0 px-4 pb-5 space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="pill bg-white/15 text-white backdrop-blur-sm border border-white/20">
+                  {article.category}
+                </span>
+                {isOpinion && (
+                  <span className="flex items-center gap-1 pill bg-amber-500/20 text-amber-200 border border-amber-300/30">
+                    <MessageSquareQuote size={11} /> Opinião
+                  </span>
+                )}
+              </div>
+              <h1 className="font-display font-bold text-2xl leading-snug text-white">
+                {article.title}
+              </h1>
+              <p className="font-mono-accent text-[10px] uppercase text-white/60">
+                {article.articleDate}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="px-4 pt-14 pb-4 space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="pill bg-secondary text-foreground">{article.category}</span>
+              {isOpinion && (
+                <span className="flex items-center gap-1 pill bg-amber-50 text-amber-700 border border-amber-200">
+                  <MessageSquareQuote size={11} /> Opinião
+                </span>
+              )}
+            </div>
+            <h1 className="font-display font-bold text-2xl leading-snug">{article.title}</h1>
+            <p className="font-mono-accent text-[10px] uppercase text-muted-foreground">
               {article.articleDate}
             </p>
           </div>
+        )}
 
-          {/* Audio */}
+        <div className="px-4 py-5 space-y-6">
+          {/* Áudio — barra fina e escura, não um bloco de acento */}
           {article.hasAudio && (
             <>
               {audioSrc && (
                 <audio ref={audioRef} src={audioSrc} onEnded={() => setIsPlaying(false)} />
               )}
-              <div className="rounded-2xl bg-gradient-primary p-4 flex items-center gap-4 text-white">
+              <div className="rounded-2xl bg-surface-dark px-4 py-3 flex items-center gap-3 text-white">
                 <button
                   onClick={audioSrc ? togglePlay : undefined}
-                  className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 hover:bg-white/30 transition-colors"
+                  className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0 hover:bg-primary/90 transition-colors"
                 >
-                  {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                  {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
                 </button>
-                <div>
-                  <div className="font-semibold text-sm flex items-center gap-1.5">
-                    <Headphones size={13} /> Girassol Lê
+                <div className="min-w-0">
+                  <div className="font-semibold text-xs flex items-center gap-1.5">
+                    <Headphones size={12} className="text-white/60" /> Girassol Lê
                   </div>
-                  <div className="text-white/70 text-xs">
+                  <div className="text-white/50 text-[11px]">
                     {article.audioDuration} · Narração em português
                   </div>
                 </div>
@@ -205,57 +236,77 @@ export const ArticleDetail = () => {
             </>
           )}
 
-          {/* Level selector */}
+          {/* Seletor de nível — profundidade, não categoria: um ícone crescente
+              substitui os 3 gradientes de cor que competiam entre si */}
           {levels.length > 0 && (
             <div>
               <p className="text-xs text-muted-foreground font-semibold mb-2">
                 Nível de explicação
               </p>
               <div className="flex gap-2">
-                {levels.map((l) => (
-                  <button
-                    key={l.level}
-                    onClick={() => setLevel(l.level)}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-all ${level === l.level ? `bg-gradient-to-r ${levelColors[l.level]} text-white border-transparent` : "border-border text-muted-foreground"}`}
-                  >
-                    <div>{l.label}</div>
-                    <div className="text-[9px] opacity-70 mt-0.5">{l.sublabel}</div>
-                  </button>
-                ))}
+                {levels.map((l) => {
+                  const Icon = levelIcons[l.level];
+                  const active = level === l.level;
+                  return (
+                    <button
+                      key={l.level}
+                      onClick={() => setLevel(l.level)}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-all flex flex-col items-center gap-1 ${
+                        active
+                          ? "bg-surface-dark text-white border-transparent"
+                          : "border-border text-muted-foreground hover:border-foreground/30"
+                      }`}
+                    >
+                      <Icon size={14} className={active ? "text-primary" : "opacity-60"} />
+                      <span>{l.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* Article text with clickable terms */}
+          {/* Texto do artigo */}
           {currentLevel && (
             <div className="card-app p-5">
-              <div
-                className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${levelColors[level]} mb-4`}
-              >
-                {currentLevel.label}
-              </div>
               <p className="text-base leading-relaxed font-display">
                 {renderTextWithTerms(currentLevel.content)}
               </p>
             </div>
           )}
 
-          {/* Key terms glossary */}
+          {/* Glossário — colapsado por omissão para não competir com o corpo do artigo */}
           {keyTerms.length > 0 && (
             <div>
-              <h2 className="font-display font-bold text-base mb-3">Glossário de termos</h2>
-              <div className="space-y-2">
-                {keyTerms.map((kt) => (
-                  <div key={kt.term} className="card-app p-4">
-                    <div className="font-semibold text-sm text-primary mb-1">{kt.term}</div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{kt.definition}</p>
-                  </div>
-                ))}
-              </div>
+              <button
+                onClick={() => setGlossaryOpen((v) => !v)}
+                className="w-full flex items-center justify-between"
+              >
+                <h2 className="font-display font-bold text-base">
+                  Glossário de termos{" "}
+                  <span className="text-muted-foreground font-normal">({keyTerms.length})</span>
+                </h2>
+                <ChevronDown
+                  size={16}
+                  className={`text-muted-foreground transition-transform ${glossaryOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {glossaryOpen && (
+                <div className="space-y-2 mt-3">
+                  {keyTerms.map((kt) => (
+                    <div key={kt.term} className="card-app p-4">
+                      <div className="font-semibold text-sm mb-1">{kt.term}</div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {kt.definition}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* References or Opinion notice */}
+          {/* Referências ou aviso de opinião */}
           {isOpinion ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
               <MessageSquareQuote size={18} className="text-amber-600 shrink-0 mt-0.5" />
@@ -270,23 +321,23 @@ export const ArticleDetail = () => {
           ) : (
             <div>
               <h2 className="font-display font-bold text-base mb-3 flex items-center gap-2">
-                <BookMarked size={16} className="text-primary" /> Referências
+                <BookMarked size={16} className="text-muted-foreground" /> Referências
               </h2>
               <div className="space-y-2">
                 {article.references!.map((ref, i) => (
                   <div key={i} className="card-app px-4 py-3 flex items-start gap-3">
                     <span className="text-[10px] font-bold text-muted-foreground font-mono-accent mt-0.5 shrink-0 w-4">
-                      [{i + 1}]
+                      {i + 1}
                     </span>
                     {ref.url ? (
                       <a
                         href={ref.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline leading-snug flex-1 flex items-start gap-1"
+                        className="text-sm text-foreground hover:text-primary transition-colors leading-snug flex-1 flex items-start gap-1"
                       >
                         {ref.label}
-                        <ExternalLink size={11} className="shrink-0 mt-0.5" />
+                        <ExternalLink size={11} className="shrink-0 mt-0.5 text-muted-foreground" />
                       </a>
                     ) : (
                       <p className="text-sm text-muted-foreground leading-snug flex-1">
@@ -299,11 +350,11 @@ export const ArticleDetail = () => {
             </div>
           )}
 
-          {/* Ask Weza */}
+          {/* Perguntar à Weza — laranja reservado só ao botão de enviar */}
           <div className="card-app p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center shrink-0">
-                <Bot size={14} className="text-white" />
+              <div className="w-7 h-7 rounded-full bg-surface-dark flex items-center justify-center shrink-0">
+                <Bot size={14} className="text-primary" />
               </div>
               <p className="font-display font-bold text-sm">Perguntar à Weza</p>
             </div>
@@ -318,7 +369,7 @@ export const ArticleDetail = () => {
                 <button
                   key={q}
                   onClick={() => handleAsk(q)}
-                  className="px-3 py-1.5 rounded-full border border-primary/30 text-[11px] font-semibold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+                  className="px-3 py-1.5 rounded-full border border-border bg-secondary text-[11px] font-semibold text-foreground hover:border-foreground/30 transition-colors"
                 >
                   {q}
                 </button>
@@ -349,7 +400,7 @@ export const ArticleDetail = () => {
             </div>
           </div>
 
-          {/* Author */}
+          {/* Autor */}
           <p className="text-[11px] text-muted-foreground text-center">
             Por <span className="font-semibold">{article.authorId}</span>
           </p>
