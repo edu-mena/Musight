@@ -1,15 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  Eye,
-  MessageSquare,
-  Users,
-  MessageSquareQuote,
-  Edit2,
-  ExternalLink,
-  Trash2,
-  FileX,
-} from "lucide-react";
+import { Eye, MessageSquare, Users, Edit2, ExternalLink, Trash2, FileX } from "lucide-react";
 import { api, type ApiArticle, type ApiDebate } from "../../lib/apiClient";
 import { statusMeta } from "../../data/researcherData";
 import { toast } from "sonner";
@@ -128,12 +119,16 @@ export const MyContent = () => {
 
   useEffect(() => {
     Promise.all([
-      api.get<ApiArticle[]>("/researcher/articles"),
-      api.get<ApiDebate[]>("/researcher/debates"),
+      api.get<{ articles: ApiArticle[]; total: number; page: number; limit: number }>(
+        "/researcher/articles",
+      ),
+      api.get<{ debates: ApiDebate[]; total: number; page: number; limit: number }>(
+        "/researcher/debates",
+      ),
     ])
       .then(([a, d]) => {
-        setArticles(a);
-        setDebates(d);
+        setArticles(a.articles);
+        setDebates(d.debates);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -231,14 +226,14 @@ export const MyContent = () => {
                     <Eye size={11} />
                     {a.views ?? 0}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare size={11} />0
-                  </span>
-                  {!a.references?.length && (
-                    <span className="pill bg-amber-100 text-amber-700 flex items-center gap-0.5">
-                      <MessageSquareQuote size={10} /> Opinião
-                    </span>
-                  )}
+                  {/*
+                    Removido o badge "Opinião" (dependia de a.references, que não
+                    vem preenchido em GET /researcher/articles — só no detalhe de
+                    um artigo específico). Mostrar aqui marcaria todos como
+                    "Opinião" indevidamente. Se este selo for importante nesta
+                    lista, o backend precisa devolver uma contagem de referências
+                    na query de listagem.
+                  */}
                 </div>
                 <ActionRow
                   id={a.id}
@@ -276,7 +271,11 @@ export const MyContent = () => {
                   </span>
                   <span className="flex items-center gap-1">
                     <MessageSquare size={11} />
-                    {d.comments?.length ?? 0}
+                    {/*
+                      d.comments só vem em GET /debates/:id (detalhe), não na
+                      listagem de /researcher/debates — por isso não mostramos
+                      um número aqui que estaria sempre errado (0 fixo).
+                    */}
                   </span>
                 </div>
                 <ActionRow

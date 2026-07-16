@@ -27,12 +27,16 @@ export const ResearcherHome = () => {
 
   useEffect(() => {
     Promise.all([
-      api.get<ApiArticle[]>("/researcher/articles"),
-      api.get<ApiDebate[]>("/researcher/debates"),
+      api.get<{ articles: ApiArticle[]; total: number; page: number; limit: number }>(
+        "/researcher/articles",
+      ),
+      api.get<{ debates: ApiDebate[]; total: number; page: number; limit: number }>(
+        "/researcher/debates",
+      ),
     ])
       .then(([a, d]) => {
-        setArticles(a);
-        setDebates(d);
+        setArticles(a.articles);
+        setDebates(d.debates);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -41,6 +45,11 @@ export const ResearcherHome = () => {
   const totalViews = articles.reduce((s, a) => s + (a.views ?? 0), 0);
   const totalPublished = articles.filter((a) => a.status === "publicado").length;
   const totalDebates = debates.filter((d) => d.status === "publicado").length;
+  // Nota: d.comments só vem preenchido em GET /debates/:id (detalhe de um debate
+  // específico), não na listagem /researcher/debates — por isso totalComments
+  // (e avgEngagement, que depende dele) fica sempre 0 aqui. Para um número real,
+  // o backend precisaria devolver uma contagem de comentários por debate na
+  // query de listagem (ex: _count no Prisma).
   const totalComments = debates.reduce((s, d) => s + (d.comments?.length ?? 0), 0);
   const totalContent = articles.length + debates.length;
   const avgEngagement = totalContent > 0 ? Math.round(totalComments / totalContent) : 0;
@@ -122,9 +131,6 @@ export const ResearcherHome = () => {
                     <span className="flex items-center gap-1">
                       <Eye size={11} />
                       {a.views ?? 0}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MessageSquare size={11} />0
                     </span>
                   </div>
                 </article>

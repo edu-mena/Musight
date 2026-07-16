@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 export const Logo = ({ light = false, size = "md" }: { light?: boolean; size?: "sm" | "md" }) => (
-  <Link to="/" className="flex items-center gap-2.5">
+  <Link to="/app/" className="flex items-center gap-2.5">
     <img
       src="/favicon.png"
       alt="MuSight"
