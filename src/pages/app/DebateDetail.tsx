@@ -42,9 +42,11 @@ export const DebateDetail = () => {
 
   useEffect(() => {
     if (!id) return;
+    // GET /debates/:id devolve { data: { debate: {...} } } — desembrulha o "debate"
     api
-      .get<ApiDebate>(`/debates/${id}`)
-      .then((d) => {
+      .get<{ debate: ApiDebate }>(`/debates/${id}`)
+      .then((res) => {
+        const d = res.debate;
         setDebate(d);
         setLocalComments(d.comments ?? []);
         setLikedIds(new Set((d.comments ?? []).filter((c) => c.userLiked).map((c) => c.id)));
@@ -86,10 +88,11 @@ export const DebateDetail = () => {
   const handleAnalyseDebate = async () => {
     openAI("Análise geral do debate");
     try {
+      // O backend espera { question }, não { message } — é o único campo aceite
+      // pelo askWezaSchema. "debate_id" não é lido pelo endpoint, por isso não
+      // adianta nada enviá-lo à parte; o contexto tem de ir dentro do texto.
       const res = await api.post<{ answer: string }>("/weza", {
-        message:
-          "Faz uma análise equilibrada deste debate: resume os principais argumentos de cada lado, identifica pontos de consenso e de discordância, e fornece contexto factual sobre o tema em Angola.",
-        debate_id: debate.id,
+        question: `Faz uma análise equilibrada do debate "${debate.title}" (resumo: "${debate.summary}"): resume os principais argumentos de cada lado, identifica pontos de consenso e de discordância, e fornece contexto factual sobre o tema em Angola.`,
       });
       setAiModal((s) => ({ ...s, loading: false, response: res.answer }));
     } catch (e) {
@@ -101,8 +104,7 @@ export const DebateDetail = () => {
     openAI(`Análise do comentário de ${c.author.name.split(" ")[0]}`);
     try {
       const res = await api.post<{ answer: string }>("/weza", {
-        message: `Avalia este argumento no contexto do debate "${debate.title}": "${c.content}". Identifica pontos fortes, eventuais lacunas, e complementa com contexto factual angolano.`,
-        debate_id: debate.id,
+        question: `Avalia este argumento no contexto do debate "${debate.title}": "${c.content}". Identifica pontos fortes, eventuais lacunas, e complementa com contexto factual angolano.`,
       });
       setAiModal((s) => ({ ...s, loading: false, response: res.answer }));
     } catch (e) {
@@ -151,11 +153,12 @@ export const DebateDetail = () => {
     if (!comment.trim() || submitting) return;
     setSubmitting(true);
     try {
-      const newComment = await api.post<ApiComment>(`/debates/${debate.id}/comments`, {
+      // POST /debates/:id/comments devolve { data: { comment: {...} } }
+      const res = await api.post<{ comment: ApiComment }>(`/debates/${debate.id}/comments`, {
         text: comment.trim(),
         side,
       });
-      setLocalComments((prev) => [...prev, newComment]);
+      setLocalComments((prev) => [...prev, res.comment]);
       setSubmitted(true);
       setComment("");
     } catch {
