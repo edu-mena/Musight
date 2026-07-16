@@ -10,7 +10,13 @@ import {
   ArrowRight,
   Clock,
 } from "lucide-react";
-import { api, type AdminStats, type ApiArticle, type ApiDebate } from "../../lib/apiClient";
+import {
+  api,
+  type AdminStats,
+  type ApiArticle,
+  type ApiDebate,
+  type Paginated,
+} from "../../lib/apiClient";
 
 function Spinner() {
   return (
@@ -27,13 +33,16 @@ export const AdminHome = () => {
   useEffect(() => {
     Promise.all([
       api.get<AdminStats>("/admin/stats"),
-      api.get<ApiArticle[]>("/admin/articles?status=em_revisao&limit=3"),
-      api.get<ApiDebate[]>("/admin/debates?status=em_revisao&limit=3"),
+      // /admin/articles e /admin/debates devolvem um envelope paginado
+      // ({ articles: [...] } / { debates: [...] }), igual às rotas públicas
+      // /articles e /debates — não um array solto.
+      api.get<Paginated<ApiArticle>>("/admin/articles?status=em_revisao&limit=3"),
+      api.get<Paginated<ApiDebate>>("/admin/debates?status=em_revisao&limit=3"),
     ])
       .then(([s, a, d]) => {
         setStats(s);
-        setPendingArticles(a);
-        setPendingDebates(d);
+        setPendingArticles(Array.isArray(a.articles) ? a.articles : []);
+        setPendingDebates(Array.isArray(d.debates) ? d.debates : []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

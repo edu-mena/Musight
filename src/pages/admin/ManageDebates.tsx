@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
-import { api, type ApiDebate } from "../../lib/apiClient";
+import { api, type ApiDebate, type Paginated } from "../../lib/apiClient";
 
 type StatusFilter = "todos" | "em_revisao" | "publicado" | "recusado";
 
@@ -39,8 +39,8 @@ export const ManageDebates = () => {
 
   useEffect(() => {
     api
-      .get<ApiDebate[]>("/admin/debates")
-      .then(setItems)
+      .get<Paginated<ApiDebate>>("/admin/debates")
+      .then((res) => setItems(res.debates ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

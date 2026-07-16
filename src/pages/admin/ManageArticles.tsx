@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Check, X, MessageSquareQuote } from "lucide-react";
 import { toast } from "sonner";
-import { api, type ApiArticle } from "../../lib/apiClient";
+import { api, type ApiArticle, type Paginated } from "../../lib/apiClient";
 
 type StatusFilter = "todos" | "em_revisao" | "publicado" | "recusado";
 
@@ -41,8 +41,8 @@ export const ManageArticles = () => {
 
   useEffect(() => {
     api
-      .get<ApiArticle[]>("/admin/articles")
-      .then(setItems)
+      .get<Paginated<ApiArticle>>("/admin/articles")
+      .then((res) => setItems(res.articles ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

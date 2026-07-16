@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Check, X, Trash2, UserCheck, ShieldAlert, Search } from "lucide-react";
 import { toast } from "sonner";
-import { api, type ApiUser } from "../../lib/apiClient";
+import { api, type ApiUser, type Paginated } from "../../lib/apiClient";
 import { roleLabels, rolePillCls } from "../../data/adminData";
 
 type FilterKey = "todos" | "user" | "researcher" | "expert" | "candidatos" | "suspensos";
@@ -239,8 +239,8 @@ export const ManageUsers = () => {
 
   useEffect(() => {
     api
-      .get<ApiUser[]>("/admin/users")
-      .then(setUsers)
+      .get<Paginated<ApiUser>>("/admin/users")
+      .then((res) => setUsers(res.users ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
