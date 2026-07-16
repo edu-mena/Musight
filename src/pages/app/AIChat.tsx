@@ -32,7 +32,7 @@ export const AIChat = () => {
     setInput("");
     setLoading(true);
     try {
-      const res = await api.post<{ answer: string }>("/weza", { message: text.trim() });
+      const res = await api.post<{ answer: string }>("/weza", { question: text.trim() });
       setMessages((m) => [...m, { id: crypto.randomUUID(), role: "ai", text: res.answer }]);
     } catch (e) {
       setMessages((m) => [
