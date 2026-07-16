@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { api, type ApiArticle } from "../../lib/apiClient";
-import { BookOpen, Headphones, ChevronRight, MessageSquareQuote } from "lucide-react";
+import { BookOpen, Headphones, ChevronRight } from "lucide-react";
 
 function Spinner() {
   return (
@@ -15,8 +15,8 @@ export const Articles = () => {
 
   useEffect(() => {
     api
-      .get<ApiArticle[]>("/articles")
-      .then(setArticles)
+      .get<{ articles: ApiArticle[]; total: number; page: number; limit: number }>("/articles")
+      .then((res) => setArticles(res.articles))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -49,11 +49,14 @@ export const Articles = () => {
                   <span className="font-mono-accent text-[10px] uppercase text-primary">
                     {a.category}
                   </span>
-                  {!a.references?.length && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-semibold">
-                      <MessageSquareQuote size={10} /> Opinião
-                    </span>
-                  )}
+                  {/*
+                    O badge "Opinião" (baseado em a.references) foi removido daqui de propósito:
+                    `references` só vem preenchido em GET /articles/:id (detalhe), nunca em
+                    GET /articles (lista) — mostrá-lo aqui marcava TODOS os artigos como
+                    "Opinião", mesmo os que tinham referências. Se este selo for importante
+                    na listagem, o backend precisa devolver uma contagem (_count) na query
+                    de listagem — falar com o backend antes de reintroduzir isto aqui.
+                  */}
                 </div>
                 <h3 className="font-display font-bold text-sm leading-snug mt-0.5">{a.title}</h3>
                 <div className="flex flex-wrap items-center gap-2 mt-2">

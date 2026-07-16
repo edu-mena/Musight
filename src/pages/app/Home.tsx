@@ -18,12 +18,16 @@ export const Home = () => {
 
   useEffect(() => {
     Promise.all([
-      api.get<ApiArticle[]>("/articles?limit=2"),
-      api.get<ApiDebate[]>("/debates?limit=3"),
+      api.get<{ articles: ApiArticle[]; total: number; page: number; limit: number }>(
+        "/articles?limit=2",
+      ),
+      api.get<{ debates: ApiDebate[]; total: number; page: number; limit: number }>(
+        "/debates?limit=3",
+      ),
     ])
       .then(([a, d]) => {
-        setArticles(a);
-        setDebates(d);
+        setArticles(a.articles);
+        setDebates(d.debates);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

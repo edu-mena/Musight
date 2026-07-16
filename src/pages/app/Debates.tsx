@@ -18,8 +18,8 @@ export const Debates = () => {
 
   useEffect(() => {
     api
-      .get<ApiDebate[]>("/debates")
-      .then(setDebates)
+      .get<{ debates: ApiDebate[]; total: number; page: number; limit: number }>("/debates")
+      .then((res) => setDebates(res.debates))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -78,7 +78,6 @@ export const Debates = () => {
                   {d.participants}
                 </span>
                 <span>{d.expertsCount} especialistas</span>
-                <span>{d.comments?.length ?? 0} comentários</span>
               </div>
             </Link>
           ))}
