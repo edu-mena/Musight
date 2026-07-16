@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import type { ExpertiseItem } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../lib/apiClient";
 import {
   User,
@@ -19,6 +19,7 @@ import {
   X,
   Check,
   PenLine,
+  Mail,
 } from "lucide-react";
 import { WriterApplicationModal } from "../../components/ui/WriterApplicationModal";
 import { toast } from "sonner";
@@ -66,6 +67,7 @@ const LEVEL_COLORS: Record<ExpertiseItem["level"], string> = {
 export const Profile = () => {
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(user?.name ?? "");
@@ -81,6 +83,10 @@ export const Profile = () => {
   const [savingInfo, setSavingInfo] = useState(false);
 
   const [showWriterModal, setShowWriterModal] = useState(false);
+  const [autoOpenWriterModal, setAutoOpenWriterModal] = useState(
+    searchParams.get("openWriterModal") === "1",
+  );
+  const [showRequestReceivedModal, setShowRequestReceivedModal] = useState(false);
 
   const [expertise, setExpertise] = useState<ExpertiseItem[]>(user?.expertise ?? []);
   const [addingTopic, setAddingTopic] = useState(false);
@@ -88,6 +94,21 @@ export const Profile = () => {
   const [newLevel, setNewLevel] = useState<ExpertiseItem["level"]>("basico");
   const [nameError, setNameError] = useState("");
   const [infoErrors, setInfoErrors] = useState<Record<string, string>>({});
+
+  // Chegou aqui a partir do botão "+" da barra inferior (utilizador que
+  // ainda não é pesquisador). Abre a candidatura automaticamente, como se
+  // tivesse clicado em "Candidatar-me a Pesquisador".
+  useEffect(() => {
+    if (!autoOpenWriterModal) return;
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("openWriterModal");
+    setSearchParams(next, { replace: true });
+  }, [autoOpenWriterModal, searchParams, setSearchParams]);
+
+  const shouldShowWriterModal =
+    showWriterModal ||
+    (autoOpenWriterModal && user?.role === "user" && !user?.appliedForResearcher);
 
   const handleLogout = () => {
     logout();
@@ -205,9 +226,12 @@ export const Profile = () => {
         motivation: data.motivation,
         portfolioUrl: data.portfolioUrl || undefined,
       });
+
       await refreshUser();
+
       setShowWriterModal(false);
-      toast.success("Candidatura submetida! A equipa irá rever em breve.");
+      setAutoOpenWriterModal(false);
+      setShowRequestReceivedModal(true);
     } catch (e) {
       toast.error((e as Error).message ?? "Erro ao submeter candidatura.");
     }
@@ -651,11 +675,35 @@ export const Profile = () => {
         </button>
       </div>
 
-      {showWriterModal && (
+      {shouldShowWriterModal && (
         <WriterApplicationModal
           onConfirm={handleWriterConfirm}
-          onClose={() => setShowWriterModal(false)}
+          onClose={() => {
+            setShowWriterModal(false);
+            setAutoOpenWriterModal(false);
+          }}
         />
+      )}
+
+      {showRequestReceivedModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-center">
+            <div className="w-14 h-14 rounded-full bg-violet-50 flex items-center justify-center mx-auto mb-4">
+              <Mail size={24} className="text-violet-600" />
+            </div>
+            <h3 className="font-display font-bold text-lg mb-2">Pedido recebido!</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Recebemos a tua candidatura a Pesquisador. A nossa equipa vai analisá-la e, caso seja
+              aceite, serás notificado.
+            </p>
+            <button
+              onClick={() => setShowRequestReceivedModal(false)}
+              className="btn-primary w-full mt-5 py-2.5 text-sm"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
       )}
     </>
   );
