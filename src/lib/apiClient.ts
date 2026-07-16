@@ -258,7 +258,7 @@ export const authApi = {
     api.post<{ message?: string }>("/auth/resend-confirmation", { email }),
   login: (body: LoginPayload) => api.post<{ token: string; user: ApiUser }>("/auth/login", body),
   logout: () => api.post<{ message?: string }>("/auth/logout", {}),
-  me: () => api.get<ApiUser>("/auth/me"),
+  me: () => api.get<{ user: ApiUser }>("/auth/me"),
   forgotPassword: (email: string) =>
     api.post<{ message?: string }>("/auth/forgot-password", { email }),
   resetPassword: (token: string, password: string) =>

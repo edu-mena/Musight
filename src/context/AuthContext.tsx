@@ -76,10 +76,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const token = localStorage.getItem("girasightin_token");
     if (!token) return;
-    // Validate token by fetching current user
+    // GET /auth/me devolve { data: { user: {...} } } — o envelope tem uma
+    // chave "user" dentro de data, não é o utilizador direto.
     api
-      .get<ApiUser>("/auth/me")
-      .then((u) => setUser(transformUser(u)))
+      .get<{ user: ApiUser }>("/auth/me")
+      .then((res) => setUser(transformUser(res.user)))
       .catch(() => {
         localStorage.removeItem("girasightin_token");
         localStorage.removeItem("girasightin_user");
@@ -99,15 +100,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const data = await api.post<{ token: string; user: ApiUser }>("/auth/register", {
+    // O backend NÃO devolve token no registo — a conta só fica ativa depois da
+    // confirmação por email. Não autentica automaticamente aqui: quem chama
+    // esta função deve navegar para a página de "verifica o teu email" a
+    // seguir, sem esperar que o utilizador fique logado.
+    await api.post<{ user: ApiUser; message?: string }>("/auth/register", {
       name,
       email,
       password,
     });
-    localStorage.setItem("girasightin_token", data.token);
-    const transformed = transformUser(data.user);
-    localStorage.setItem("girasightin_user", JSON.stringify(transformed));
-    setUser(transformed);
   };
 
   const logout = () => {
@@ -124,8 +125,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refreshUser = async () => {
-    const u = await api.get<ApiUser>("/auth/me");
-    const transformed = transformUser(u);
+    // Mesmo formato de envelope do efeito inicial — { data: { user: {...} } }.
+    const res = await api.get<{ user: ApiUser }>("/auth/me");
+    const transformed = transformUser(res.user);
     localStorage.setItem("girasightin_user", JSON.stringify(transformed));
     setUser(transformed);
   };
