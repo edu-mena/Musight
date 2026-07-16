@@ -104,52 +104,6 @@ export const Home = () => {
         </h1>
       </div>
 
-      {/* Debates — sem destaque, cards neutros num carrossel horizontal.
-          Dados minimizados de propósito: o clique já abre o bottom sheet
-          com o resumo completo, então o card só precisa de identificar o
-          debate, não de o explicar. */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-0.5">
-          <h2 className="font-display font-bold text-lg">O que acha disso:</h2>
-          <Link
-            to="/app/debates"
-            className="text-xs text-muted-foreground font-semibold flex items-center gap-0.5 hover:text-foreground transition-colors"
-          >
-            Ver todos <ChevronRight size={12} />
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="card-app p-6 flex justify-center">
-            <Spinner />
-          </div>
-        ) : safeDebates.length > 0 ? (
-          <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none snap-x snap-mandatory">
-            {safeDebates.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => setSelectedDebate(d)}
-                className="snap-start shrink-0 w-40 text-left rounded-2xl bg-secondary p-3.5 hover:bg-secondary/70 transition-colors"
-              >
-                <span className="text-[10px] font-mono-accent uppercase text-muted-foreground">
-                  {d.category}
-                </span>
-                <h4 className="font-display font-bold text-sm leading-snug mt-1 line-clamp-3">
-                  {d.title}
-                </h4>
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground mt-2.5">
-                  <Users size={11} /> {d.participants}
-                </span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="card-app p-6 text-center text-sm text-muted-foreground">
-            Em breve novos debates.
-          </div>
-        )}
-      </section>
-
       {/* Artigos */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -290,6 +244,52 @@ export const Home = () => {
         </div>
         <ChevronRight size={16} className="text-primary shrink-0" />
       </Link>
+
+      {/* Debates — por último. Sem destaque, cards neutros num carrossel
+          horizontal. Dados minimizados de propósito: o clique já abre o
+          bottom sheet com o resumo completo, então o card só precisa de
+          identificar o debate, não de o explicar. */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between px-0.5">
+          <h2 className="font-display font-bold text-lg">O que acha disso:</h2>
+          <Link
+            to="/app/debates"
+            className="text-xs text-muted-foreground font-semibold flex items-center gap-0.5 hover:text-foreground transition-colors"
+          >
+            Ver todos <ChevronRight size={12} />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="card-app p-6 flex justify-center">
+            <Spinner />
+          </div>
+        ) : safeDebates.length > 0 ? (
+          <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none snap-x snap-mandatory">
+            {safeDebates.map((d) => (
+              <button
+                key={d.id}
+                onClick={() => setSelectedDebate(d)}
+                className="snap-start shrink-0 w-40 text-left rounded-2xl bg-secondary p-3.5 hover:bg-secondary/70 transition-colors"
+              >
+                <span className="text-[10px] font-mono-accent uppercase text-muted-foreground">
+                  {d.category}
+                </span>
+                <h4 className="font-display font-bold text-sm leading-snug mt-1 line-clamp-3">
+                  {d.title}
+                </h4>
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground mt-2.5">
+                  <Users size={11} /> {d.participants}
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="card-app p-6 text-center text-sm text-muted-foreground">
+            Em breve novos debates.
+          </div>
+        )}
+      </section>
 
       {/* Bottom sheet — pré-visualização do debate, sem fechar a Home */}
       {selectedDebate && (

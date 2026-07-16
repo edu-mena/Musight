@@ -1,8 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { api, type ApiDebate, type ApiComment } from "../../lib/apiClient";
-import { ChevronLeft, ThumbsUp, Users, Send, Bot, Award, MessageCircle } from "lucide-react";
+import {
+  ChevronLeft,
+  ThumbsUp,
+  Users,
+  Send,
+  Bot,
+  Award,
+  MessageCircle,
+  Quote,
+  SlidersHorizontal,
+} from "lucide-react";
 import { AIResponseModal } from "../../components/ui/AIResponseModal";
 import { ContributionGuidelinesModal } from "../../components/ui/ContributionGuidelinesModal";
 
@@ -29,6 +39,8 @@ export const DebateDetail = () => {
   const [submitted, setSubmitted] = useState(false);
   const [filterType, setFilterType] = useState<"todos" | "especialistas" | "gerais">("todos");
   const [filterSide, setFilterSide] = useState<"todos" | "favor" | "neutro" | "contra">("todos");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersRef = useRef<HTMLDivElement>(null);
   const [guidelineStep, setGuidelineStep] = useState<0 | 1 | 2>(0);
   const [hasAgreed, setHasAgreed] = useState(false);
 
@@ -55,6 +67,18 @@ export const DebateDetail = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Fecha o painel de filtros ao clicar fora dele.
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) {
+        setFiltersOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [filtersOpen]);
+
   if (loading)
     return (
       <div className="px-4 py-8 flex justify-center">
@@ -79,6 +103,7 @@ export const DebateDetail = () => {
     if (filterSide !== "todos" && c.side !== filterSide) return false;
     return true;
   });
+  const filtersActive = filterType !== "todos" || filterSide !== "todos";
 
   const openAI = (context: string) =>
     setAiModal({ isOpen: true, loading: true, response: null, error: null, context });
@@ -194,83 +219,127 @@ export const DebateDetail = () => {
           </Link>
         </div>
 
-        {/* Hero escuro — mesmo tratamento editorial do card em destaque na home */}
-        <div className="relative bg-surface-dark bg-radial-amber pt-16 pb-6 px-4 text-white">
-          <span className="pill bg-white/15 text-white border border-white/20">
-            {debate.category}
-          </span>
-          <h1 className="font-display font-bold text-xl leading-snug mt-3">{debate.title}</h1>
-          <p className="text-sm text-white/70 mt-2 leading-relaxed">{debate.summary}</p>
-          <div className="flex items-center gap-4 mt-4 text-xs text-white/60">
-            <span className="flex items-center gap-1">
-              <Users size={11} />
-              {debate.participants} participantes
+        {/* Hero escuro sólido, sem gradiente — a aspa estilizada no canto
+            substitui o glow radial como assinatura visual. */}
+        <div className="relative bg-surface-dark pt-16 pb-6 px-4 text-white overflow-hidden">
+          <Quote
+            size={140}
+            strokeWidth={1}
+            className="absolute -top-6 -right-8 text-white/5 pointer-events-none"
+          />
+          <div className="relative">
+            <span className="pill bg-white/15 text-white border border-white/20">
+              {debate.category}
             </span>
-            <span className="flex items-center gap-1">
-              <Award size={11} />
-              {debate.expertsCount} especialistas
-            </span>
-            <span className="flex items-center gap-1">
-              <MessageCircle size={11} />
-              {allComments.length} contributos
-            </span>
+            <h1 className="font-display font-bold text-xl leading-snug mt-3">{debate.title}</h1>
+            <p className="text-sm text-white/70 mt-2 leading-relaxed">{debate.summary}</p>
+            <div className="flex items-center gap-4 mt-4 text-xs text-white/60">
+              <span className="flex items-center gap-1">
+                <Users size={11} />
+                {debate.participants} participantes
+              </span>
+              <span className="flex items-center gap-1">
+                <Award size={11} />
+                {debate.expertsCount} especialistas
+              </span>
+              <span className="flex items-center gap-1">
+                <MessageCircle size={11} />
+                {allComments.length} contributos
+              </span>
+            </div>
+            <button
+              onClick={handleAnalyseDebate}
+              className="mt-4 flex items-center gap-2 btn-primary !py-2 !px-4 !text-xs w-fit"
+            >
+              <Bot size={13} /> Consultar a Weza sobre este debate
+            </button>
           </div>
-          <button
-            onClick={handleAnalyseDebate}
-            className="mt-4 flex items-center gap-2 btn-primary !py-2 !px-4 !text-xs w-fit"
-          >
-            <Bot size={13} /> Consultar a Weza sobre este debate
-          </button>
         </div>
 
         <div className="px-4 py-5 space-y-5">
           {/* Comentários */}
           <div>
-            <h2 className="font-display font-bold text-base mb-3">Contribuições</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display font-bold text-base">Contribuições</h2>
 
-            {/* Filtros — tons neutros, não competem com o conteúdo */}
-            <div className="space-y-2 mb-4">
-              <div className="flex gap-1.5">
-                {(["todos", "especialistas", "gerais"] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setFilterType(t)}
-                    className={`flex-1 py-1.5 rounded-xl text-[11px] font-semibold border transition-all capitalize ${
-                      filterType === t
-                        ? "bg-surface-dark text-white border-transparent"
-                        : "border-border text-muted-foreground hover:border-foreground/30"
-                    }`}
-                  >
-                    {t === "todos" ? "Todos" : t === "especialistas" ? "Especialistas" : "Gerais"}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-1.5">
-                {(["todos", "favor", "neutro", "contra"] as const).map((s) => {
-                  const active = filterSide === s;
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => setFilterSide(s)}
-                      className={`flex-1 py-1.5 rounded-xl text-[11px] font-semibold border transition-all flex items-center justify-center gap-1.5 ${
-                        active
-                          ? "bg-surface-dark text-white border-transparent"
-                          : "border-border text-muted-foreground hover:border-foreground/30"
-                      }`}
-                    >
-                      {s !== "todos" && (
-                        <span className={`w-1.5 h-1.5 rounded-full ${sideDot[s]}`} />
-                      )}
-                      {s === "todos"
-                        ? "Todos"
-                        : s === "favor"
-                          ? "A Favor"
-                          : s === "neutro"
-                            ? "Neutro"
-                            : "Contra"}
-                    </button>
-                  );
-                })}
+              {/* Filtros escondidos atrás de um ícone — só ocupam espaço
+                  quando o utilizador realmente quer filtrar. */}
+              <div className="relative" ref={filtersRef}>
+                <button
+                  onClick={() => setFiltersOpen((v) => !v)}
+                  className={`relative w-8 h-8 rounded-full flex items-center justify-center border transition-colors ${
+                    filtersActive
+                      ? "bg-surface-dark text-white border-transparent"
+                      : "border-border text-muted-foreground hover:border-foreground/30"
+                  }`}
+                  aria-label="Filtrar contribuições"
+                >
+                  <SlidersHorizontal size={14} />
+                  {filtersActive && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary border border-white" />
+                  )}
+                </button>
+
+                {filtersOpen && (
+                  <div className="absolute right-0 top-10 w-56 bg-white rounded-xl shadow-lg border border-border p-3 space-y-3 z-30">
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                        Tipo
+                      </p>
+                      <div className="flex gap-1.5">
+                        {(["todos", "especialistas", "gerais"] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setFilterType(t)}
+                            className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold border transition-all capitalize ${
+                              filterType === t
+                                ? "bg-surface-dark text-white border-transparent"
+                                : "border-border text-muted-foreground hover:border-foreground/30"
+                            }`}
+                          >
+                            {t === "todos"
+                              ? "Todos"
+                              : t === "especialistas"
+                                ? "Especialistas"
+                                : "Gerais"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                        Posição
+                      </p>
+                      <div className="flex gap-1.5">
+                        {(["todos", "favor", "neutro", "contra"] as const).map((s) => {
+                          const active = filterSide === s;
+                          return (
+                            <button
+                              key={s}
+                              onClick={() => setFilterSide(s)}
+                              className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold border transition-all flex items-center justify-center gap-1 ${
+                                active
+                                  ? "bg-surface-dark text-white border-transparent"
+                                  : "border-border text-muted-foreground hover:border-foreground/30"
+                              }`}
+                            >
+                              {s !== "todos" && (
+                                <span className={`w-1.5 h-1.5 rounded-full ${sideDot[s]}`} />
+                              )}
+                              {s === "todos"
+                                ? "Todos"
+                                : s === "favor"
+                                  ? "Favor"
+                                  : s === "neutro"
+                                    ? "Neutro"
+                                    : "Contra"}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -284,10 +353,7 @@ export const DebateDetail = () => {
                 const expert = isExpertComment(c);
                 const liked = likedIds.has(c.id);
                 return (
-                  <div
-                    key={c.id}
-                    className={`card-app p-4 border-l-4 ${c.side === "favor" ? "border-l-emerald-400" : c.side === "contra" ? "border-l-red-400" : "border-l-border"}`}
-                  >
+                  <div key={c.id} className="card-app p-4">
                     <div className="flex items-start gap-3">
                       <div
                         className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold ${expert ? "bg-surface-dark" : "bg-muted"}`}
