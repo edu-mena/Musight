@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { useAuth } from "../context/AuthContext";
 import { Logo } from "../components/layout/Logo";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
@@ -31,6 +32,31 @@ export const Login = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    setError("");
+    const apiBase =
+      import.meta.env.VITE_API_URL || "https://rosybrown-wasp-975017.hostingersite.com";
+
+    try {
+      const res = await fetch(`${apiBase.replace(/\/$/, "")}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const responseData = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        navigate("/app");
+      } else {
+        setError(responseData.message || "Erro ao validar o login com a Google.");
+      }
+    } catch {
+      setError("Falha na comunicação com o servidor de autenticação.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-surface-darker flex items-center justify-center p-5">
       <div className="absolute inset-0 bg-radial-amber" />
@@ -44,6 +70,24 @@ export const Login = () => {
         </div>
 
         <div className="card-app p-6">
+          <div className="w-full flex justify-center mb-2">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Erro ao autenticar com a Google.")}
+              theme="outline"
+              size="large"
+              width="340"
+            />
+          </div>
+
+          <div className="relative flex py-4 items-center">
+            <div className="flex-grow border-t border-border/40"></div>
+            <span className="flex-shrink mx-4 text-xs text-muted-foreground uppercase tracking-wider">
+              ou
+            </span>
+            <div className="flex-grow border-t border-border/40"></div>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <div>
               <label className="block text-sm font-semibold mb-1.5">Email</label>

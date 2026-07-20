@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Landing } from "./pages/Landing";
 import { Login } from "./pages/Login";
@@ -112,23 +113,25 @@ const AppLayout = () => (
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-          <Route path="/auth/reset-password" element={<ResetPassword />} />
-          <Route path="/auth/confirm-email" element={<ConfirmEmail />} />
-          <Route path="/politicas" element={<Policies />} />
-          <Route path="/app/*" element={<AppLayout />} />
-          <Route path="/researcher/*" element={<ResearcherLayout />} />
-          <Route path="/admin/*" element={<AdminLayout />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/confirm-email" element={<ConfirmEmail />} />
+            <Route path="/politicas" element={<Policies />} />
+            <Route path="/app/*" element={<AppLayout />} />
+            <Route path="/researcher/*" element={<ResearcherLayout />} />
+            <Route path="/admin/*" element={<AdminLayout />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }

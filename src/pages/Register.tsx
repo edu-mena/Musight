@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { useAuth } from "../context/AuthContext";
 import { Logo } from "../components/layout/Logo";
-import { Loader2 } from "lucide-react";
-import { ExternalLink } from "lucide-react";
+import { Loader2, ExternalLink } from "lucide-react";
 import { registerSchema, type RegisterInput } from "../lib/validation/auth";
 
 export const Register = () => {
@@ -23,8 +23,6 @@ export const Register = () => {
     defaultValues: { termsAccepted: false },
   });
 
-  const termsAccepted = watch("termsAccepted");
-
   const onSubmit = async (data: RegisterInput) => {
     setError("");
     try {
@@ -32,6 +30,31 @@ export const Register = () => {
       navigate("/verify-email", { state: { email: data.email } });
     } catch (e) {
       setError((e as Error).message || "Erro ao criar conta. Tenta novamente.");
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    setError("");
+    const apiBase =
+      import.meta.env.VITE_API_URL || "https://rosybrown-wasp-975017.hostingersite.com";
+
+    try {
+      const res = await fetch(`${apiBase.replace(/\/$/, "")}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const responseData = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        navigate("/app");
+      } else {
+        setError(responseData.message || "Erro ao registar conta com a Google.");
+      }
+    } catch {
+      setError("Falha na comunicação com o servidor de autenticação.");
     }
   };
 
@@ -48,6 +71,24 @@ export const Register = () => {
         </div>
 
         <div className="card-app p-6">
+          <div className="w-full flex justify-center mb-2">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Erro ao registar com a Google.")}
+              theme="outline"
+              size="large"
+              width="340"
+            />
+          </div>
+
+          <div className="relative flex py-4 items-center">
+            <div className="flex-grow border-t border-border/40"></div>
+            <span className="flex-shrink mx-4 text-xs text-muted-foreground uppercase tracking-wider">
+              ou
+            </span>
+            <div className="flex-grow border-t border-border/40"></div>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <div>
               <label className="block text-sm font-semibold mb-1.5">Nome</label>
@@ -90,7 +131,7 @@ export const Register = () => {
               <div className="relative mt-0.5 shrink-0">
                 <input type="checkbox" className="sr-only peer" {...register("termsAccepted")} />
                 <div className="w-5 h-5 rounded-md border-2 border-border peer-checked:border-primary peer-checked:bg-primary transition-all flex items-center justify-center">
-                  {termsAccepted && (
+                  {watch("termsAccepted") && (
                     <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
                       <path
                         d="M1 4l3 3 5-6"

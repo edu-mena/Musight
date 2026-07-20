@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@react-oauth/google": "^0.13.5",
     "@sentry/react": "^10.63.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
