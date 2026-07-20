@@ -67,7 +67,7 @@ export const Register = () => {
             <Logo light />
           </div>
           <h1 className="font-display font-bold text-2xl text-white">Cria a tua conta</h1>
-          <p className="text-white/60 text-sm mt-1">Gratuito para sempre! Sem publicidade.</p>
+          <p className="text-white/60 text-sm mt-1">Forever Free. Sem publicidade.</p>
         </div>
 
         <div className="card-app p-6">
