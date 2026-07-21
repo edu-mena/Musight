@@ -123,6 +123,18 @@ export const ArticleDetail = () => {
   const audioSrc = withProtocol(article.audioSrc);
 
   const renderTextWithTerms = (text: string) => {
+    // Detecta se o texto contém HTML
+    const hasHTML = /<[^>]+>/.test(text);
+
+    if (hasHTML) {
+      // Se contém HTML, renderiza como HTML puro
+      // (os tooltips de termos-chave funcionam melhor com texto simples)
+      return (
+        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: text }} />
+      );
+    }
+
+    // Lógica original com busca case-insensitive
     const parts: (string | React.ReactElement)[] = [text];
     keyTerms.forEach((kt) => {
       const result: (string | React.ReactElement)[] = [];
@@ -131,17 +143,26 @@ export const ArticleDetail = () => {
           result.push(part);
           return;
         }
-        const idx = part.indexOf(kt.term);
+
+        // Busca case-insensitive: converte ambos para lowercase apenas para a busca
+        const lowerPart = part.toLowerCase();
+        const lowerTerm = kt.term.toLowerCase();
+        const idx = lowerPart.indexOf(lowerTerm);
+
         if (idx === -1) {
           result.push(part);
           return;
         }
+
         result.push(part.slice(0, idx));
-        result.push(<TermTooltip key={kt.term} term={kt.term} definition={kt.definition} />);
+        result.push(
+          <TermTooltip key={`${kt.term}-${idx}`} term={kt.term} definition={kt.definition} />,
+        );
         result.push(part.slice(idx + kt.term.length));
       });
       parts.splice(0, parts.length, ...result);
     });
+
     return parts;
   };
 
