@@ -5,7 +5,6 @@ import { api, type ApiArticle, type ApiDebate } from "../../lib/apiClient";
 import {
   Bot,
   Headphones,
-  Play,
   Users,
   MessageSquare,
   Eye,
@@ -88,8 +87,6 @@ export const Home = () => {
 
   const safeDebates = Array.isArray(debates) ? debates : [];
   const safeArticles = Array.isArray(articles) ? articles : [];
-  const topArticle = safeArticles[0];
-  const otherArticles = safeArticles.slice(1);
 
   const contributionsOf = (d: ApiDebate) =>
     typeof d.comments?.length === "number" ? d.comments.length : null;
@@ -104,10 +101,10 @@ export const Home = () => {
         </h1>
       </div>
 
-      {/* Artigos */}
+      {/* Artigos — Feed de notícias com cards empilhados */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display font-bold text-lg">Artigos</h2>
+        <div className="flex items-center justify-between px-0.5">
+          <h2 className="font-display font-bold text-lg">Artigos recentes</h2>
           <Link
             to="/app/artigos"
             className="text-xs text-muted-foreground font-semibold flex items-center gap-0.5 hover:text-foreground transition-colors"
@@ -120,22 +117,23 @@ export const Home = () => {
           <div className="card-app p-6 flex justify-center">
             <Spinner />
           </div>
-        ) : topArticle ? (
-          <>
-            {/* Hero de artigo: imagem grande real + CTA para ouvir/ler */}
-            {(() => {
-              const cover = withProtocol(topArticle.image);
+        ) : safeArticles.length > 0 ? (
+          <div className="space-y-3">
+            {safeArticles.map((article) => {
+              const cover = withProtocol(article.image);
               return (
                 <Link
-                  to={`/app/artigos/${topArticle.id}`}
+                  key={article.id}
+                  to={`/app/artigos/${article.id}`}
                   className="card-app block overflow-hidden group"
                 >
-                  <div className="relative aspect-[4/3] bg-secondary">
+                  {/* Imagem — full width com fallback */}
+                  <div className="relative aspect-[4/3] bg-secondary overflow-hidden">
                     {cover ? (
                       <img
                         src={cover}
-                        alt={topArticle.title}
-                        className="w-full h-full object-cover"
+                        alt={article.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).style.display = "none";
                         }}
@@ -145,82 +143,39 @@ export const Home = () => {
                         <BookOpen size={28} className="text-muted-foreground/40" />
                       </div>
                     )}
-                    <div className="absolute bottom-3 left-3">
-                      <span className="pill bg-white/95 text-foreground flex items-center gap-1.5 shadow-sm">
-                        {topArticle.hasAudio ? (
-                          <>
-                            <Play size={11} className="text-primary" /> Ouvir matéria
-                          </>
-                        ) : (
-                          <>
-                            <BookOpen size={11} className="text-primary" /> Ler matéria
-                          </>
-                        )}
-                      </span>
-                    </div>
                   </div>
-                  <div className="p-4">
-                    <span className="font-mono-accent text-[10px] uppercase text-muted-foreground">
-                      {topArticle.category}
-                    </span>
-                    <h3 className="font-display font-bold text-base leading-snug mt-1">
-                      {topArticle.title}
+
+                  {/* Conteúdo do card */}
+                  <div className="p-4 space-y-3">
+                    {/* Categoria e áudio badge */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="pill bg-secondary text-foreground/70 text-[10px] font-mono-accent uppercase">
+                        {article.category}
+                      </span>
+                      {article.hasAudio && (
+                        <span className="flex items-center gap-1 pill bg-primary/10 text-primary text-[10px] font-semibold">
+                          <Headphones size={10} /> {article.audioDuration}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Título */}
+                    <h3 className="font-display font-bold text-base leading-snug group-hover:text-primary transition-colors">
+                      {article.title}
                     </h3>
+
+                    {/* Stats de engagement */}
                     <StatRow
                       items={[
-                        { icon: Eye, value: topArticle.views },
-                        ...(topArticle.hasAudio && topArticle.audioDuration
-                          ? [{ icon: Headphones, value: topArticle.audioDuration }]
-                          : []),
+                        { icon: Eye, value: article.views },
+                        ...(article.hasAudio ? [{ icon: Headphones, value: "Áudio" }] : []),
                       ]}
                     />
                   </div>
                 </Link>
               );
-            })()}
-
-            {/* Restantes artigos — lista compacta com miniatura real */}
-            {otherArticles.length > 0 && (
-              <div className="space-y-2.5">
-                {otherArticles.map((a) => {
-                  const thumb = withProtocol(a.image);
-                  return (
-                    <Link
-                      key={a.id}
-                      to={`/app/artigos/${a.id}`}
-                      className="card-app flex gap-3 p-3 hover:shadow-md transition-shadow"
-                    >
-                      <div className="w-16 h-16 rounded-xl bg-secondary shrink-0 overflow-hidden flex items-center justify-center">
-                        {thumb ? (
-                          <img src={thumb} alt={a.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <BookOpen size={18} className="text-muted-foreground/40" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-mono-accent text-[10px] uppercase text-muted-foreground">
-                          {a.category}
-                        </span>
-                        <h4 className="font-display font-bold text-sm leading-snug mt-0.5">
-                          {a.title}
-                        </h4>
-                        <div className="flex items-center gap-3 mt-1.5">
-                          {a.hasAudio && (
-                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-semibold">
-                              <Headphones size={10} /> {a.audioDuration}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <Eye size={10} /> {a.views}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </>
+            })}
+          </div>
         ) : (
           <div className="card-app p-6 text-center text-sm text-muted-foreground">
             Em breve novos artigos.
