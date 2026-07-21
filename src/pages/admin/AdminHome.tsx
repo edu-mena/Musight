@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import {
   api,
+  adminApi,
   type AdminStats,
   type ApiArticle,
   type ApiDebate,
@@ -120,18 +121,12 @@ export const AdminHome = () => {
 
   useEffect(() => {
     Promise.all([
-      api.get<AdminStats>("/admin/stats"),
-      // /admin/articles e /admin/debates devolvem um envelope paginado
-      // ({ articles: [...] } / { debates: [...] }), igual às rotas públicas
-      // /articles e /debates — não um array solto.
+      adminApi.stats(),
       api.get<Paginated<ApiArticle>>("/admin/articles?status=em_revisao&limit=3"),
       api.get<Paginated<ApiDebate>>("/admin/debates?status=em_revisao&limit=3"),
     ])
       .then(([s, a, d]) => {
-        console.log("s =", s);
-        console.log("keys =", Object.keys(s));
-
-        setStats(s);
+        setStats(s.stats);
         setPendingArticles(Array.isArray(a.articles) ? a.articles : []);
         setPendingDebates(Array.isArray(d.debates) ? d.debates : []);
       })

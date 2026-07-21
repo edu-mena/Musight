@@ -121,6 +121,10 @@ export interface AdminStats {
   pendingApplications: number;
 }
 
+interface AdminStatsResponse {
+  stats: AdminStats;
+}
+
 export interface Paginated<T> {
   articles?: T[];
   debates?: T[];
@@ -314,7 +318,7 @@ export const wezaApi = {
 };
 
 export const adminApi = {
-  stats: () => api.get<AdminStats>("/admin/stats"),
+  stats: () => api.get<AdminStatsResponse>("/admin/stats"),
   users: (page = 1, limit = 10) =>
     api.get<Paginated<ApiUser>>(`/admin/users${qs({ page, limit })}`),
   articles: (status: string) => api.get<ApiArticle[]>(`/admin/articles${qs({ status })}`),
