@@ -9,7 +9,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { loginSchema, type LoginInput } from "../lib/validation/auth";
 
 export const Login = () => {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
@@ -34,26 +34,15 @@ export const Login = () => {
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setError("");
-    const apiBase =
-      import.meta.env.VITE_API_URL || "https://rosybrown-wasp-975017.hostingersite.com";
-
+    if (!credentialResponse.credential) {
+      setError("Erro ao autenticar com a Google.");
+      return;
+    }
     try {
-      const res = await fetch(`${apiBase.replace(/\/$/, "")}/auth/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ credential: credentialResponse.credential }),
-      });
-
-      const responseData = await res.json().catch(() => ({}));
-
-      if (res.ok) {
-        navigate("/app");
-      } else {
-        setError(responseData.message || "Erro ao validar o login com a Google.");
-      }
-    } catch {
-      setError("Falha na comunicação com o servidor de autenticação.");
+      await loginWithGoogle(credentialResponse.credential);
+      navigate("/app");
+    } catch (e) {
+      setError((e as Error).message || "Erro ao autenticar com a Google.");
     }
   };
 

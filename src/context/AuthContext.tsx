@@ -36,6 +36,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
@@ -99,6 +100,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(transformed);
   };
 
+  const loginWithGoogle = async (credential: string) => {
+    const data = await api.post<{ token: string; user: ApiUser }>("/auth/google", {
+      credential,
+    });
+    localStorage.setItem("girasightin_token", data.token);
+    const transformed = transformUser(data.user);
+    localStorage.setItem("girasightin_user", JSON.stringify(transformed));
+    setUser(transformed);
+  };
+
   const register = async (name: string, email: string, password: string) => {
     // O backend NÃO devolve token no registo — a conta só fica ativa depois da
     // confirmação por email. Não autentica automaticamente aqui: quem chama
@@ -134,7 +145,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, register, logout, updateProfile, refreshUser, loading }}
+      value={{
+        user,
+        login,
+        loginWithGoogle,
+        register,
+        logout,
+        updateProfile,
+        refreshUser,
+        loading,
+      }}
     >
       {children}
     </AuthContext.Provider>
