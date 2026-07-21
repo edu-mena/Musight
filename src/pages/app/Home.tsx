@@ -60,7 +60,7 @@ export const Home = () => {
   const [selectedDebate, setSelectedDebate] = useState<ApiDebate | null>(null);
   const [currentArticleIndex, setCurrentArticleIndex] = useState(0);
   const articlesScrollRef = useRef<HTMLDivElement>(null);
-  const autoScrollTimer = useRef<NodeJS.Timeout>();
+  const autoScrollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -88,7 +88,9 @@ export const Home = () => {
     }, 5000); // Muda a cada 5 segundos
 
     return () => {
-      if (autoScrollTimer.current) clearInterval(autoScrollTimer.current);
+      if (autoScrollTimer.current !== null) {
+        clearInterval(autoScrollTimer.current);
+      }
     };
   }, [articles.length]);
 
@@ -224,7 +226,9 @@ export const Home = () => {
                     onClick={() => {
                       setCurrentArticleIndex(idx);
                       // Reset do auto-scroll
-                      if (autoScrollTimer.current) clearInterval(autoScrollTimer.current);
+                      if (autoScrollTimer.current !== null) {
+                        clearInterval(autoScrollTimer.current);
+                      }
                       autoScrollTimer.current = setInterval(() => {
                         setCurrentArticleIndex((prev) => (prev + 1) % safeArticles.length);
                       }, 5000);
