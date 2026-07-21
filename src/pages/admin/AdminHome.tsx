@@ -128,6 +128,9 @@ export const AdminHome = () => {
       api.get<Paginated<ApiDebate>>("/admin/debates?status=em_revisao&limit=3"),
     ])
       .then(([s, a, d]) => {
+        console.log("s =", s);
+        console.log("keys =", Object.keys(s));
+
         setStats(s);
         setPendingArticles(Array.isArray(a.articles) ? a.articles : []);
         setPendingDebates(Array.isArray(d.debates) ? d.debates : []);
