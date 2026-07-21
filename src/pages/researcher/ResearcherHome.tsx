@@ -7,7 +7,7 @@ import {
   TrendingUp,
   PenLine,
   Lightbulb,
-  ArrowRight,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { api, type ApiArticle, type ApiDebate } from "../../lib/apiClient";
@@ -15,7 +15,7 @@ import { statusMeta } from "../../data/researcherData";
 
 function Spinner() {
   return (
-    <div className="w-6 h-6 rounded-full border-2 border-violet-500 border-t-transparent animate-spin mx-auto" />
+    <div className="w-5 h-5 rounded-full border-2 border-violet-300 border-t-violet-600 animate-spin mx-auto" />
   );
 }
 
@@ -67,73 +67,95 @@ export const ResearcherHome = () => {
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
       <header className="space-y-1">
-        <h1 className="font-display font-bold text-2xl md:text-3xl">Bom dia, {firstName} 👋</h1>
+        <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900">
+          Bom dia, {firstName}
+        </h1>
         <p className="text-sm text-muted-foreground font-mono-accent">Área de Pesquisador</p>
       </header>
 
-      {/* Métricas */}
-      <section className="grid grid-cols-2 gap-3">
-        {stats.map((s) => {
-          const Icon = s.icon;
-          return (
-            <div key={s.label} className="card-app p-4 flex flex-col gap-2">
-              <Icon size={18} strokeWidth={1.8} className="text-violet-600" />
-              <div className="font-display font-bold text-2xl text-primary leading-none">
-                {s.value}
+      {/* Uma só faixa de métricas em vez de quatro cartões repetidos */}
+      {loading ? (
+        <div className="card-app p-8 flex justify-center">
+          <Spinner />
+        </div>
+      ) : (
+        <section className="card-app grid grid-cols-2 sm:flex divide-x divide-y sm:divide-y-0 divide-slate-100">
+          {stats.map((s) => {
+            const Icon = s.icon;
+            return (
+              <div key={s.label} className="flex-1 min-w-[120px] px-4 py-4">
+                <Icon size={13} strokeWidth={2} className="text-violet-400 mb-1.5" />
+                <div className="font-display font-bold text-xl text-slate-900 leading-none">
+                  {s.value}
+                </div>
+                <div className="text-[10px] text-muted-foreground font-mono-accent uppercase tracking-wide mt-1.5">
+                  {s.label}
+                </div>
               </div>
-              <div className="text-[10px] text-muted-foreground font-mono-accent uppercase">
-                {s.label}
-              </div>
-            </div>
-          );
-        })}
-      </section>
+            );
+          })}
+        </section>
+      )}
 
       {/* Conteúdo recente */}
-      <section>
-        <div className="flex items-baseline justify-between mb-3">
-          <h2 className="font-display font-bold text-lg">Os meus últimos conteúdos</h2>
+      <section className="card-app p-4">
+        <div className="flex items-baseline justify-between mb-1">
+          <h2 className="font-display font-bold text-base text-slate-900">
+            Os meus últimos conteúdos
+          </h2>
           <Link
             to="/researcher/conteudos"
-            className="text-xs font-semibold text-violet-700 hover:underline flex items-center gap-0.5"
+            className="text-xs font-semibold text-violet-700 hover:text-violet-900 transition-colors"
           >
-            Ver tudo <ArrowRight size={12} />
+            Ver tudo
           </Link>
         </div>
         {loading ? (
-          <div className="card-app p-6 flex justify-center">
+          <div className="py-6 flex justify-center">
             <Spinner />
           </div>
         ) : recent.length === 0 ? (
-          <div className="card-app p-6 text-center text-sm text-muted-foreground">
+          <p className="py-8 text-center text-sm text-muted-foreground">
             Ainda não tens conteúdos publicados.
-          </div>
+          </p>
         ) : (
-          <div className="space-y-3">
+          <div className="divide-y divide-slate-100">
             {recent.map((a) => {
               const st = statusMeta[a.status as keyof typeof statusMeta] ?? {
                 label: a.status,
-                cls: "bg-muted text-muted-foreground",
+                cls: "bg-slate-100 text-slate-600",
               };
               return (
-                <article key={a.id} className="card-app p-4 flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="pill bg-primary/10 text-primary">{a.category}</span>
-                      <span className={`pill ${st.cls}`}>{st.label}</span>
+                <Link
+                  key={a.id}
+                  to={`/researcher/conteudos/${a.id}`}
+                  className="group flex items-center gap-3 py-3 hover:bg-slate-50 -mx-1 px-1 rounded-md transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {a.category}
+                      </span>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${st.cls}`}>
+                        {st.label}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground font-mono-accent shrink-0">
-                      {a.articleDate}
-                    </span>
+                    <h3 className="font-semibold text-sm leading-snug truncate text-slate-800">
+                      {a.title}
+                    </h3>
                   </div>
-                  <h3 className="font-semibold text-sm leading-snug">{a.title}</h3>
-                  <div className="text-[10px] text-muted-foreground font-mono-accent flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <Eye size={11} />
-                      {a.views ?? 0}
-                    </span>
+                  <div className="text-[10px] text-muted-foreground font-mono-accent flex items-center gap-1 shrink-0">
+                    <Eye size={11} />
+                    {a.views ?? 0}
                   </div>
-                </article>
+                  <span className="text-[10px] text-muted-foreground font-mono-accent shrink-0">
+                    {a.articleDate}
+                  </span>
+                  <ChevronRight
+                    size={14}
+                    className="text-slate-300 group-hover:text-slate-500 transition-colors shrink-0"
+                  />
+                </Link>
               );
             })}
           </div>
@@ -142,45 +164,47 @@ export const ResearcherHome = () => {
 
       {/* Acções rápidas */}
       <section>
-        <h2 className="font-display font-bold text-lg mb-3">Acções rápidas</h2>
+        <h2 className="font-display font-bold text-lg text-slate-900 mb-3">Acções rápidas</h2>
         <div className="grid sm:grid-cols-2 gap-3">
           <Link
             to="/researcher/publicar-artigo"
-            className="card-app p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+            className="card-app p-5 flex items-center gap-4 hover:border-violet-200 transition-colors"
           >
-            <div className="w-12 h-12 rounded-xl bg-violet-100 grid place-items-center text-violet-700 shrink-0">
-              <PenLine size={22} strokeWidth={1.8} />
+            <div className="w-10 h-10 rounded-lg bg-violet-50 grid place-items-center text-violet-700 shrink-0">
+              <PenLine size={18} strokeWidth={1.8} />
             </div>
             <div className="flex-1">
-              <div className="font-display font-semibold">Publicar artigo</div>
+              <div className="font-display font-semibold text-sm text-slate-900">
+                Publicar artigo
+              </div>
               <div className="text-xs text-muted-foreground">
                 Submete um novo artigo para revisão
               </div>
             </div>
-            <ArrowRight size={18} className="text-muted-foreground shrink-0" />
+            <ChevronRight size={16} className="text-slate-300 shrink-0" />
           </Link>
           <Link
             to="/researcher/criar-debate"
-            className="card-app p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+            className="card-app p-5 flex items-center gap-4 hover:border-violet-200 transition-colors"
           >
-            <div className="w-12 h-12 rounded-xl bg-violet-100 grid place-items-center text-violet-700 shrink-0">
-              <MessageSquare size={22} strokeWidth={1.8} />
+            <div className="w-10 h-10 rounded-lg bg-violet-50 grid place-items-center text-violet-700 shrink-0">
+              <MessageSquare size={18} strokeWidth={1.8} />
             </div>
             <div className="flex-1">
-              <div className="font-display font-semibold">Criar debate</div>
+              <div className="font-display font-semibold text-sm text-slate-900">Criar debate</div>
               <div className="text-xs text-muted-foreground">Abre uma nova discussão pública</div>
             </div>
-            <ArrowRight size={18} className="text-muted-foreground shrink-0" />
+            <ChevronRight size={16} className="text-slate-300 shrink-0" />
           </Link>
         </div>
       </section>
 
       {/* Dicas editoriais */}
-      <section className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3">
-        <Lightbulb size={20} className="text-amber-600 shrink-0 mt-0.5" strokeWidth={1.8} />
+      <section className="card-app p-4 flex gap-3 border-l-2 border-l-amber-300">
+        <Lightbulb size={16} className="text-amber-600 shrink-0 mt-0.5" strokeWidth={1.8} />
         <div className="space-y-1.5">
-          <h3 className="font-display font-semibold text-amber-900">Lembra-te:</h3>
-          <ul className="text-sm text-amber-900/80 space-y-1 list-disc list-inside marker:text-amber-600">
+          <h3 className="font-display font-semibold text-sm text-slate-900">Lembra-te</h3>
+          <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside marker:text-amber-500">
             <li>Artigos sem referências são classificados como Opinião.</li>
             <li>Conteúdos em revisão são avaliados em até 48 horas.</li>
             <li>Usa os 3 níveis de explicação para chegar a mais leitores.</li>

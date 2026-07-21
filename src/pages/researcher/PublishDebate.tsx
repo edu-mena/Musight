@@ -8,30 +8,62 @@ import { debateSchema } from "../../lib/validation/content";
 
 type Stance = "favor" | "neutro" | "contra";
 
-const stances: { id: Stance; label: string; icon: typeof ThumbsUp; cls: string; active: string }[] =
-  [
-    {
-      id: "favor",
-      label: "A Favor",
-      icon: ThumbsUp,
-      cls: "bg-emerald-50 border-emerald-200 text-emerald-700",
-      active: "bg-emerald-100 border-emerald-500 ring-2 ring-emerald-500",
-    },
-    {
-      id: "neutro",
-      label: "Neutro",
-      icon: Minus,
-      cls: "bg-muted border-border text-foreground",
-      active: "bg-slate-100 border-slate-700 ring-2 ring-slate-700",
-    },
-    {
-      id: "contra",
-      label: "Contra",
-      icon: ThumbsDown,
-      cls: "bg-red-50 border-red-200 text-red-700",
-      active: "bg-red-100 border-red-500 ring-2 ring-red-500",
-    },
-  ];
+const EXPLANATION_LIMIT = 1000;
+
+const stances: { id: Stance; label: string; icon: typeof ThumbsUp }[] = [
+  { id: "favor", label: "A favor", icon: ThumbsUp },
+  { id: "neutro", label: "Neutro", icon: Minus },
+  { id: "contra", label: "Contra", icon: ThumbsDown },
+];
+
+const stanceActiveCls: Record<Stance, string> = {
+  favor: "border-emerald-500 bg-emerald-50 text-emerald-700",
+  neutro: "border-slate-700 bg-slate-100 text-slate-800",
+  contra: "border-red-500 bg-red-50 text-red-700",
+};
+
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="card-app p-5 space-y-4">
+      <div>
+        <h2 className="font-display font-semibold text-sm text-slate-900">{title}</h2>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Field({
+  label,
+  hint,
+  error,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-mono-accent text-muted-foreground uppercase tracking-wide">
+        {label}
+        {hint && <span className="normal-case text-muted-foreground/60"> {hint}</span>}
+      </label>
+      {children}
+      {error && <p className="text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
 
 export const PublishDebate = () => {
   const navigate = useNavigate();
@@ -99,111 +131,114 @@ export const PublishDebate = () => {
   };
 
   return (
-    <div className="pb-8">
-      <header className="sticky top-0 z-20 h-14 px-4 flex items-center gap-2 border-b border-border bg-white/95 backdrop-blur-sm">
+    <div className="pb-8 bg-slate-50/50 min-h-screen">
+      <header className="sticky top-0 z-20 h-14 px-4 flex items-center gap-2 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
         <Link
           to="/researcher/conteudos"
-          className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-slate-800 transition-colors"
         >
           <ChevronLeft size={18} /> Voltar
         </Link>
-        <h1 className="flex-1 text-center font-display font-bold text-base">Criar Debate</h1>
+        <h1 className="flex-1 text-center font-display font-bold text-base text-slate-900">
+          Criar Debate
+        </h1>
         <div className="w-16" />
       </header>
 
       <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-4">
-        <div className="space-y-2">
-          <label className="text-xs font-mono-accent text-muted-foreground uppercase tracking-wide">
-            Título do debate
-          </label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Uma questão clara e provocadora para o debate..."
-            className="w-full px-4 py-3 rounded-xl border border-border bg-white font-display font-semibold text-base focus:outline-none focus:ring-2 focus:ring-violet-500"
-          />
-          {fieldErrors.title && <p className="text-xs text-destructive">{fieldErrors.title}</p>}
-        </div>
+        <FormSection title="Identificação" description="Como o debate vai aparecer na plataforma.">
+          <Field label="Título do debate" error={fieldErrors.title}>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Uma questão clara e provocadora para o debate..."
+              className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white font-display font-semibold text-base text-slate-900 placeholder:font-normal placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
+            />
+          </Field>
 
-        <div className="space-y-2">
-          <label className="text-xs font-mono-accent text-muted-foreground uppercase tracking-wide">
-            Categoria
-          </label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value as Category)}
-            className="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-        </div>
+          <Field label="Categoria">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as Category)}
+              className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </Field>
+        </FormSection>
 
-        <div className="space-y-2">
-          <label className="text-xs font-mono-accent text-muted-foreground uppercase tracking-wide">
-            Resumo
-          </label>
-          <textarea
-            value={summary}
-            onChange={(e) => setSummary(e.target.value.slice(0, 300))}
-            rows={4}
-            placeholder="Contextualiza o debate. O que está em causa? Qual é o dilema?"
-            className="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500"
-          />
-          <div className="text-[10px] text-muted-foreground font-mono-accent text-right">
-            {summary.length}/300
-          </div>
-          {fieldErrors.summary && <p className="text-xs text-destructive">{fieldErrors.summary}</p>}
-        </div>
+        <FormSection
+          title="Resumo"
+          description="Contextualiza o debate: o que está em causa, qual é o dilema."
+        >
+          <Field label="Resumo" error={fieldErrors.summary}>
+            <textarea
+              value={summary}
+              onChange={(e) => setSummary(e.target.value.slice(0, EXPLANATION_LIMIT))}
+              rows={6}
+              placeholder="Contextualiza o debate. O que está em causa? Qual é o dilema?"
+              className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 resize-none focus:outline-none focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
+            />
+            <div className="text-[10px] text-muted-foreground font-mono-accent text-right">
+              {summary.length}/{EXPLANATION_LIMIT}
+            </div>
+          </Field>
+        </FormSection>
 
-        <div className="space-y-2">
-          <label className="text-xs font-mono-accent text-muted-foreground uppercase tracking-wide">
-            A tua posição inicial
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {stances.map((s) => {
-              const Icon = s.icon;
-              const isActive = stance === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setStance(s.id)}
-                  className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${isActive ? s.active : s.cls + " hover:opacity-80"}`}
-                >
-                  <Icon size={22} strokeWidth={1.8} />
-                  <span className="font-display font-semibold text-sm">{s.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <FormSection
+          title="Posição e argumento"
+          description="Define o teu ponto de partida para abrir a discussão."
+        >
+          <Field label="A tua posição inicial">
+            <div className="grid grid-cols-3 gap-2">
+              {stances.map((s) => {
+                const Icon = s.icon;
+                const isActive = stance === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setStance(s.id)}
+                    className={`py-3 rounded-lg border transition-colors flex flex-col items-center gap-1.5 ${
+                      isActive
+                        ? stanceActiveCls[s.id]
+                        : "border-slate-200 text-muted-foreground hover:border-slate-300 hover:text-slate-700"
+                    }`}
+                  >
+                    <Icon size={18} strokeWidth={1.8} />
+                    <span className="font-display font-semibold text-xs">{s.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
 
-        <div className="space-y-2">
-          <label className="text-xs font-mono-accent text-muted-foreground uppercase tracking-wide">
-            Argumento inicial
-          </label>
-          <textarea
-            value={argument}
-            onChange={(e) => setArgument(e.target.value)}
-            rows={4}
-            placeholder="Escreve o teu argumento inicial para abrir o debate..."
-            className="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500"
-          />
-          {fieldErrors.argument && (
-            <p className="text-xs text-destructive">{fieldErrors.argument}</p>
-          )}
-        </div>
+          <Field label="Argumento inicial" error={fieldErrors.argument}>
+            <textarea
+              value={argument}
+              onChange={(e) => setArgument(e.target.value.slice(0, EXPLANATION_LIMIT))}
+              rows={6}
+              placeholder="Escreve o teu argumento inicial para abrir o debate..."
+              className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 resize-none focus:outline-none focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
+            />
+            <div className="text-[10px] text-muted-foreground font-mono-accent text-right">
+              {argument.length}/{EXPLANATION_LIMIT}
+            </div>
+          </Field>
+        </FormSection>
 
-        <div className="space-y-2">
-          <label className="text-xs font-mono-accent text-muted-foreground uppercase tracking-wide">
-            Especialistas a convidar{" "}
-            <span className="normal-case text-muted-foreground/60">(opcional · máx 3)</span>
-          </label>
-          <div className="flex flex-wrap gap-2 p-2 rounded-xl border border-border bg-white min-h-12">
+        <FormSection
+          title="Especialistas a convidar"
+          description="Opcional, até 3 pessoas. Enriquecem o debate com contraditório directo."
+        >
+          <div className="flex flex-wrap gap-2 p-2.5 rounded-lg border border-slate-200 bg-white min-h-12">
             {tags.map((t) => (
-              <span key={t} className="pill bg-violet-100 text-violet-700 flex items-center gap-1">
+              <span
+                key={t}
+                className="text-xs font-semibold px-2 py-1 rounded-md bg-violet-50 text-violet-700 flex items-center gap-1"
+              >
                 {t}
                 <button
                   onClick={() => setTags((xs) => xs.filter((x) => x !== t))}
@@ -218,12 +253,12 @@ export const PublishDebate = () => {
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={onTagKey}
-                placeholder={tags.length === 0 ? "Escreve nome e pressiona Enter" : ""}
+                placeholder={tags.length === 0 ? "Escreve o nome e pressiona Enter" : ""}
                 className="flex-1 min-w-32 px-2 py-1 text-sm bg-transparent focus:outline-none"
               />
             )}
           </div>
-        </div>
+        </FormSection>
 
         <button
           onClick={handleSubmit}

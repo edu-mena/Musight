@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Check, X, Trash2, UserCheck, ShieldAlert, Search } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Check, X, Trash2, UserCheck, ShieldAlert, Search, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import { api, type ApiUser, type Paginated } from "../../lib/apiClient";
 import { roleLabels, rolePillCls } from "../../data/adminData";
@@ -17,7 +17,7 @@ const filters: { id: FilterKey; label: string }[] = [
 
 function Spinner() {
   return (
-    <div className="w-6 h-6 rounded-full border-2 border-slate-400 border-t-transparent animate-spin mx-auto" />
+    <div className="w-5 h-5 rounded-full border-2 border-slate-300 border-t-slate-600 animate-spin mx-auto" />
   );
 }
 
@@ -30,19 +30,19 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function avatarColor(id: number) {
-  const colors = [
-    "bg-violet-500",
-    "bg-sky-500",
-    "bg-emerald-500",
-    "bg-amber-500",
-    "bg-rose-500",
-    "bg-indigo-500",
-  ];
-  return colors[id % colors.length];
+function useClickOutside(onOutside: () => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onOutside();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onOutside]);
+  return ref;
 }
 
-function UserCard({
+function UserRow({
   user,
   onUpdate,
   onDelete,
@@ -51,11 +51,14 @@ function UserCard({
   onUpdate: (id: number, changes: Partial<ApiUser>) => void;
   onDelete: (id: number) => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const menuRef = useClickOutside(() => setMenuOpen(false));
 
   const toggleVerify = async () => {
     const next = !user.verified;
     onUpdate(user.id, { verified: next });
+    setMenuOpen(false);
     try {
       await api.put(`/admin/users/${user.id}`, { verified: next });
       toast(next ? "Utilizador verificado." : "Verificação removida.");
@@ -68,6 +71,7 @@ function UserCard({
   const toggleSuspend = async () => {
     const next = !user.suspended;
     onUpdate(user.id, { suspended: next });
+    setMenuOpen(false);
     try {
       await api.put(`/admin/users/${user.id}`, { suspended: next });
       toast(next ? "Conta suspensa." : "Conta reactivada.");
@@ -114,119 +118,120 @@ function UserCard({
   };
 
   const rolePill =
-    rolePillCls[user.role as keyof typeof rolePillCls] ?? "bg-muted text-muted-foreground";
+    rolePillCls[user.role as keyof typeof rolePillCls] ?? "bg-slate-100 text-slate-600";
   const roleLabel = roleLabels[user.role as keyof typeof roleLabels] ?? user.role;
+  const isPending = user.appliedForResearcher && user.role === "user";
 
   return (
-    <div className={`card-app p-4 space-y-3 ${user.suspended ? "opacity-70" : ""}`}>
+    <div className={`p-4 ${user.suspended ? "opacity-60" : ""}`}>
       <div className="flex items-start gap-3">
-        <div
-          className={`w-10 h-10 rounded-xl ${avatarColor(user.id)} grid place-items-center text-white font-display font-bold text-sm shrink-0`}
-        >
+        <div className="w-9 h-9 rounded-full bg-slate-100 grid place-items-center text-slate-600 font-display font-bold text-xs shrink-0">
           {initials(user.name)}
         </div>
+
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-display font-semibold text-sm">{user.name}</span>
-            {user.verified && (
-              <span className="pill bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
-                <Check size={10} /> Verificado
-              </span>
-            )}
+            <span className="font-display font-semibold text-sm text-slate-900">{user.name}</span>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${rolePill}`}>
+              {roleLabel}
+            </span>
+            {user.verified && <Check size={13} className="text-emerald-600" strokeWidth={2.5} />}
             {user.suspended && (
-              <span className="pill bg-red-100 text-red-700 flex items-center gap-0.5">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-50 text-red-700 flex items-center gap-0.5">
                 <ShieldAlert size={10} /> Suspenso
               </span>
             )}
           </div>
           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            <span className={`pill ${rolePill}`}>{roleLabel}</span>
-            {user.appliedForResearcher && user.role === "user" && (
-              <span className="pill bg-amber-100 text-amber-700 flex items-center gap-0.5">
-                <UserCheck size={10} /> Candidato
-              </span>
-            )}
-          </div>
-          <p className="text-[10px] text-muted-foreground font-mono-accent mt-1">
+          <p className="text-[10px] text-muted-foreground font-mono-accent mt-0.5">
             Aderiu {user.createdAt} · {user.contributions} contrib. · {user.debatesCount} debates
           </p>
         </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <select
+            value={user.role}
+            onChange={(e) => changeRole(e.target.value as ApiUser["role"])}
+            className="text-xs border border-slate-200 rounded-md px-1.5 py-1 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-300"
+          >
+            <option value="user">Utilizador</option>
+            <option value="researcher">Pesquisador</option>
+            <option value="expert">Especialista</option>
+          </select>
+
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              aria-label="Mais ações"
+            >
+              <MoreVertical size={15} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-10">
+                <button
+                  onClick={toggleVerify}
+                  className="w-full text-left text-xs px-3 py-2 hover:bg-slate-50 text-slate-700 flex items-center gap-2"
+                >
+                  <Check size={13} />
+                  {user.verified ? "Desverificar" : "Verificar"}
+                </button>
+                <button
+                  onClick={toggleSuspend}
+                  className="w-full text-left text-xs px-3 py-2 hover:bg-slate-50 text-slate-700 flex items-center gap-2"
+                >
+                  <ShieldAlert size={13} />
+                  {user.suspended ? "Activar conta" : "Suspender"}
+                </button>
+                <div className="my-1 border-t border-slate-100" />
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setConfirmDelete(true);
+                  }}
+                  className="w-full text-left text-xs px-3 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2"
+                >
+                  <Trash2 size={13} />
+                  Eliminar conta
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {user.appliedForResearcher && user.role === "user" && (
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-amber-50 border border-amber-200">
-          <UserCheck size={14} className="text-amber-700 shrink-0" />
+      {isPending && (
+        <div className="mt-3 flex items-center gap-2 pl-3 border-l-2 border-amber-300">
+          <UserCheck size={13} className="text-amber-700 shrink-0" />
           <p className="text-xs text-amber-800 flex-1">Candidatura a Pesquisador pendente</p>
           <button
             onClick={approveApplication}
-            className="text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 px-3 py-1.5 rounded-lg transition-colors"
+            className="text-xs font-semibold text-amber-700 hover:text-amber-800 hover:bg-amber-50 px-2 py-1 rounded-md transition-colors"
           >
             Aprovar
           </button>
         </div>
       )}
 
-      <div className="pt-2 border-t border-border space-y-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>Papel:</span>
-            <select
-              value={user.role}
-              onChange={(e) => changeRole(e.target.value as ApiUser["role"])}
-              className="text-xs border border-border rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
-            >
-              <option value="user">Utilizador</option>
-              <option value="researcher">Pesquisador</option>
-              <option value="expert">Especialista</option>
-            </select>
-          </div>
+      {confirmDelete && (
+        <div className="mt-3 flex items-center gap-2 pl-3 border-l-2 border-red-300">
+          <span className="text-xs text-red-600 flex-1">
+            Eliminar a conta de {user.name} permanentemente?
+          </span>
           <button
-            onClick={toggleVerify}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${
-              user.verified
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                : "border-border bg-muted text-muted-foreground hover:bg-slate-100 hover:text-slate-700"
-            }`}
+            onClick={() => setConfirmDelete(false)}
+            className="text-xs font-semibold text-muted-foreground px-2 py-1 hover:text-slate-700"
           >
-            {user.verified ? "Desverificar" : "Verificar"}
+            Cancelar
           </button>
           <button
-            onClick={toggleSuspend}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${
-              user.suspended
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-            }`}
+            onClick={handleDelete}
+            className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-md transition-colors"
           >
-            {user.suspended ? "Activar conta" : "Suspender"}
+            Eliminar
           </button>
         </div>
-        {confirmDelete ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-red-600 flex-1">Confirmar eliminação permanente?</span>
-            <button
-              onClick={() => setConfirmDelete(false)}
-              className="text-xs font-semibold text-muted-foreground px-2 py-1"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleDelete}
-              className="text-xs font-semibold text-white bg-red-600 px-3 py-1 rounded-lg"
-            >
-              Eliminar
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1 px-1"
-          >
-            <Trash2 size={12} /> Eliminar conta
-          </button>
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -245,12 +250,8 @@ export const ManageUsers = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = users.filter((u) => {
-    const q = search.toLowerCase();
-    const matchesSearch =
-      !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-    if (!matchesSearch) return false;
-    switch (filter) {
+  const matchesFilter = (u: ApiUser, f: FilterKey) => {
+    switch (f) {
       case "todos":
         return true;
       case "candidatos":
@@ -258,9 +259,21 @@ export const ManageUsers = () => {
       case "suspensos":
         return u.suspended;
       default:
-        return u.role === filter;
+        return u.role === f;
     }
+  };
+
+  const filtered = users.filter((u) => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    return matchesSearch && matchesFilter(u, filter);
   });
+
+  const counts = filters.reduce<Record<string, number>>((acc, f) => {
+    acc[f.id] = users.filter((u) => matchesFilter(u, f.id)).length;
+    return acc;
+  }, {});
 
   const updateUser = (id: number, changes: Partial<ApiUser>) =>
     setUsers((xs) => xs.map((u) => (u.id === id ? { ...u, ...changes } : u)));
@@ -268,9 +281,9 @@ export const ManageUsers = () => {
   const deleteUser = (id: number) => setUsers((xs) => xs.filter((u) => u.id !== id));
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-4">
-      <header>
-        <h1 className="font-display font-bold text-2xl md:text-3xl">Utilizadores</h1>
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-5">
+      <header className="space-y-1">
+        <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900">Utilizadores</h1>
         <p className="text-sm text-muted-foreground">
           Gere contas, papéis, verificações e candidaturas.
         </p>
@@ -285,7 +298,7 @@ export const ManageUsers = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Pesquisar por nome ou email..."
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white"
+          className="w-full pl-9 pr-9 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-slate-300 bg-white"
         />
         {search && (
           <button
@@ -297,14 +310,22 @@ export const ManageUsers = () => {
         )}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="flex gap-1 border-b border-slate-200 -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto">
         {filters.map((f) => (
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`pill transition-colors whitespace-nowrap ${filter === f.id ? "bg-slate-700 text-white" : "bg-muted text-muted-foreground hover:bg-slate-100 hover:text-slate-700"}`}
+            className={`relative px-3 py-2 text-xs font-semibold whitespace-nowrap transition-colors ${
+              filter === f.id ? "text-slate-900" : "text-muted-foreground hover:text-slate-700"
+            }`}
           >
             {f.label}
+            <span className="ml-1.5 font-mono-accent text-[10px] text-slate-400">
+              {counts[f.id]}
+            </span>
+            {filter === f.id && (
+              <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-slate-800 rounded-full" />
+            )}
           </button>
         ))}
       </div>
@@ -318,16 +339,11 @@ export const ManageUsers = () => {
           Nenhum utilizador encontrado.
         </div>
       ) : (
-        <>
-          <p className="text-xs text-muted-foreground font-mono-accent">
-            {filtered.length} {filtered.length === 1 ? "utilizador" : "utilizadores"}
-          </p>
-          <div className="space-y-3">
-            {filtered.map((u) => (
-              <UserCard key={u.id} user={u} onUpdate={updateUser} onDelete={deleteUser} />
-            ))}
-          </div>
-        </>
+        <div className="card-app divide-y divide-slate-100">
+          {filtered.map((u) => (
+            <UserRow key={u.id} user={u} onUpdate={updateUser} onDelete={deleteUser} />
+          ))}
+        </div>
       )}
     </div>
   );

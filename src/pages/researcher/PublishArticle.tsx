@@ -12,6 +12,13 @@ import {
   Square,
   Upload,
   Trash2,
+  Bold,
+  Italic,
+  Underline,
+  List,
+  ListOrdered,
+  Link2,
+  Eraser,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../lib/apiClient";
@@ -23,6 +30,7 @@ type AudioTab = "gravar" | "importar";
 
 const MAX_IMAGE_MB = 5;
 const MAX_AUDIO_MB = 25;
+const LEVEL_CHAR_LIMIT = 1000;
 
 // Rascunho é guardado apenas neste navegador (não vai para o backend).
 const DRAFT_STORAGE_KEY = "girassol:article-draft";
@@ -38,26 +46,32 @@ type DraftPayload = {
   savedAt: string;
 };
 
-const tabs: { id: Level; label: string; subtitle: string; cls: string; placeholder: string }[] = [
+const tabs: {
+  id: Level;
+  label: string;
+  subtitle: string;
+  dot: string;
+  placeholder: string;
+}[] = [
   {
     id: "basico",
     label: "Básico",
     subtitle: "Para o Cidadão",
-    cls: "from-emerald-400 to-emerald-600",
+    dot: "bg-emerald-500",
     placeholder: "Explica de forma simples, como se fosse a um familiar. Evita jargões.",
   },
   {
     id: "intermedio",
     label: "Intermédio",
     subtitle: "Visão Prática",
-    cls: "from-amber-400 to-orange-500",
+    dot: "bg-amber-500",
     placeholder: "Para quem quer entender o contexto e as implicações práticas.",
   },
   {
     id: "avancado",
     label: "Avançado",
     subtitle: "Análise Técnica",
-    cls: "from-violet-500 to-purple-700",
+    dot: "bg-violet-500",
     placeholder: "Análise técnica para profissionais e especialistas da área.",
   },
 ];
@@ -66,6 +80,150 @@ function formatDuration(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60);
   const s = Math.floor(totalSeconds % 60);
   return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+// Comprimento em texto puro de um HTML (usado para validar o mínimo de
+// conteúdo e não deixar o utilizador submeter só tags vazias).
+function plainTextLength(html: string) {
+  if (typeof document === "undefined") return html.trim().length;
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return (div.textContent ?? "").trim().length;
+}
+
+function ToolbarButton({
+  onClick,
+  label,
+  children,
+}: {
+  onClick: () => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 transition-colors"
+    >
+      {children}
+    </button>
+  );
+}
+
+// Editor de texto formatado leve, sem dependências externas: contentEditable
+// com uma barra de ferramentas mínima (negrito, itálico, sublinhado, listas,
+// link). Não controlado pelo React a cada tecla — evita o cursor "saltar" em
+// contentEditable — o HTML só é lido para fora via onChange.
+function RichTextEditor({
+  initialHtml,
+  onChange,
+  limit,
+  placeholder,
+}: {
+  initialHtml: string;
+  onChange: (html: string, length: number) => void;
+  limit: number;
+  placeholder: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [length, setLength] = useState(() => plainTextLength(initialHtml));
+
+  useEffect(() => {
+    if (ref.current) ref.current.innerHTML = initialHtml;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const readState = () => {
+    const el = ref.current;
+    if (!el) return;
+    const text = el.textContent ?? "";
+    setLength(text.length);
+    onChange(el.innerHTML, text.length);
+  };
+
+  const exec = (cmd: string, value?: string) => {
+    ref.current?.focus();
+    document.execCommand(cmd, false, value);
+    readState();
+  };
+
+  const handleBeforeInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const native = e.nativeEvent as InputEvent;
+    const el = ref.current;
+    if (!el) return;
+    const currentLength = el.textContent?.length ?? 0;
+    if (native.inputType?.startsWith("insert") && currentLength >= limit) {
+      e.preventDefault();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const el = ref.current;
+    if (!el) return;
+    const currentLength = el.textContent?.length ?? 0;
+    const remaining = limit - currentLength;
+    if (remaining <= 0) return;
+    const text = e.clipboardData.getData("text/plain").slice(0, remaining);
+    document.execCommand("insertText", false, text);
+    readState();
+  };
+
+  const addLink = () => {
+    const url = window.prompt("URL do link:");
+    if (url) exec("createLink", url);
+  };
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white overflow-hidden focus-within:ring-1 focus-within:ring-violet-300 focus-within:border-violet-300">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-slate-100 bg-slate-50">
+        <ToolbarButton onClick={() => exec("bold")} label="Negrito">
+          <Bold size={14} />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => exec("italic")} label="Itálico">
+          <Italic size={14} />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => exec("underline")} label="Sublinhado">
+          <Underline size={14} />
+        </ToolbarButton>
+        <span className="w-px h-4 bg-slate-200 mx-1" />
+        <ToolbarButton onClick={() => exec("insertUnorderedList")} label="Lista">
+          <List size={14} />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => exec("insertOrderedList")} label="Lista numerada">
+          <ListOrdered size={14} />
+        </ToolbarButton>
+        <ToolbarButton onClick={addLink} label="Adicionar link">
+          <Link2 size={14} />
+        </ToolbarButton>
+        <span className="w-px h-4 bg-slate-200 mx-1" />
+        <ToolbarButton onClick={() => exec("removeFormat")} label="Limpar formatação">
+          <Eraser size={14} />
+        </ToolbarButton>
+      </div>
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={readState}
+        onBeforeInput={handleBeforeInput}
+        onPaste={handlePaste}
+        data-placeholder={placeholder}
+        className="rich-editor px-4 py-3 text-sm text-slate-800 leading-relaxed min-h-[150px] focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-violet-700 [&_a]:underline"
+      />
+      <div
+        className={`flex justify-end px-3 py-1.5 border-t border-slate-100 text-[10px] font-mono-accent ${
+          length >= limit ? "text-red-600" : "text-muted-foreground"
+        }`}
+      >
+        {length}/{limit}
+      </div>
+    </div>
+  );
 }
 
 function Section({
@@ -86,7 +244,7 @@ function Section({
         onClick={onToggle}
         className="w-full flex items-center justify-between p-4"
       >
-        <span className="font-display font-semibold">{title}</span>
+        <span className="font-display font-semibold text-slate-900">{title}</span>
         {open ? (
           <ChevronUp size={18} className="text-muted-foreground" />
         ) : (
@@ -115,6 +273,11 @@ export const PublishArticle = () => {
     basico: "",
     intermedio: "",
     avancado: "",
+  });
+  const [contentLength, setContentLength] = useState<Record<Level, number>>({
+    basico: 0,
+    intermedio: 0,
+    avancado: 0,
   });
 
   const [terms, setTerms] = useState<{ term: string; definition: string }[]>([]);
@@ -150,7 +313,7 @@ export const PublishArticle = () => {
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const canSubmit = title.trim().length > 0 && content.basico.trim().length > 0;
+  const canSubmit = title.trim().length > 0 && contentLength.basico > 0;
 
   // Ao montar, avisa se existir um rascunho guardado neste navegador.
   useEffect(() => {
@@ -170,7 +333,13 @@ export const PublishArticle = () => {
             setCategory(draft.category ?? CATEGORIES[0]);
             setExcerpt(draft.excerpt ?? "");
             setDate(draft.date ?? today);
-            setContent(draft.content ?? { basico: "", intermedio: "", avancado: "" });
+            const restored = draft.content ?? { basico: "", intermedio: "", avancado: "" };
+            setContent(restored);
+            setContentLength({
+              basico: plainTextLength(restored.basico ?? ""),
+              intermedio: plainTextLength(restored.intermedio ?? ""),
+              avancado: plainTextLength(restored.avancado ?? ""),
+            });
             setTerms(draft.terms ?? []);
             setRefs(draft.refs ?? []);
             toast.success("Rascunho restaurado. Lembra-te de reanexar imagem/áudio, se tinhas.");
@@ -337,7 +506,7 @@ export const PublishArticle = () => {
             sublabel: "Análise técnica",
             content: content.avancado,
           },
-        ].filter((item) => item.content.trim().length > 0),
+        ].filter((item) => plainTextLength(item.content).length > 0),
       ),
     );
     form.append("keyTerms", JSON.stringify(terms));
@@ -424,14 +593,24 @@ export const PublishArticle = () => {
 
   return (
     <div className="pb-32">
-      <header className="sticky top-0 z-20 h-14 px-4 flex items-center gap-2 border-b border-border bg-white/95 backdrop-blur-sm">
+      {/* Placeholder do editor de texto formatado (contentEditable não suporta
+          placeholder nativo). */}
+      <style>{`
+        .rich-editor:empty:before {
+          content: attr(data-placeholder);
+          color: #94a3b8;
+          pointer-events: none;
+        }
+      `}</style>
+
+      <header className="sticky top-0 z-20 h-14 px-4 flex items-center gap-2 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
         <Link
           to="/researcher/conteudos"
-          className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-slate-800 transition-colors"
         >
           <ChevronLeft size={18} /> Voltar
         </Link>
-        <h1 className="flex-1 text-center font-display font-bold text-base truncate">
+        <h1 className="flex-1 text-center font-display font-bold text-base text-slate-900 truncate">
           Publicar Artigo
         </h1>
         <button
@@ -449,13 +628,13 @@ export const PublishArticle = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Título do artigo..."
-            className="w-full px-4 py-3 rounded-xl border border-border bg-white font-display font-semibold text-base focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white font-display font-semibold text-base text-slate-900 placeholder:font-normal placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
           />
-          {fieldErrors.title && <p className="text-xs text-destructive">{fieldErrors.title}</p>}
+          {fieldErrors.title && <p className="text-xs text-red-600">{fieldErrors.title}</p>}
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
-            className="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
           >
             {CATEGORIES.map((c) => (
               <option key={c}>{c}</option>
@@ -467,7 +646,7 @@ export const PublishArticle = () => {
               onChange={(e) => setExcerpt(e.target.value.slice(0, 200))}
               placeholder="Resumo curto do artigo (máx 200 caracteres)..."
               rows={2}
-              className="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 resize-none focus:outline-none focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
             />
             <div className="text-[10px] text-muted-foreground font-mono-accent text-right mt-1">
               {excerpt.length}/200
@@ -477,7 +656,7 @@ export const PublishArticle = () => {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
           />
         </Section>
 
@@ -490,10 +669,21 @@ export const PublishArticle = () => {
                   key={t.id}
                   type="button"
                   onClick={() => setActiveTab(t.id)}
-                  className={`p-3 rounded-xl text-left transition-all ${active ? `bg-gradient-to-br ${t.cls} text-white shadow-md` : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
+                  className={`p-3 rounded-lg text-left border transition-colors ${
+                    active
+                      ? "border-slate-300 bg-slate-50"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
                 >
-                  <div className="font-display font-semibold text-sm">{t.label}</div>
-                  <div className="text-[10px] font-mono-accent opacity-80">{t.subtitle}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${t.dot}`} />
+                    <span className="font-display font-semibold text-sm text-slate-900">
+                      {t.label}
+                    </span>
+                  </div>
+                  <div className="text-[10px] font-mono-accent text-muted-foreground mt-0.5">
+                    {t.subtitle}
+                  </div>
                 </button>
               );
             })}
@@ -501,22 +691,20 @@ export const PublishArticle = () => {
           {tabs.map(
             (t) =>
               activeTab === t.id && (
-                <div key={t.id}>
-                  <textarea
-                    value={content[t.id]}
-                    onChange={(e) => setContent((c) => ({ ...c, [t.id]: e.target.value }))}
-                    placeholder={t.placeholder}
-                    rows={6}
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500"
-                  />
-                  <div className="text-[10px] text-muted-foreground font-mono-accent text-right mt-1">
-                    {content[t.id].length} caracteres
-                  </div>
-                </div>
+                <RichTextEditor
+                  key={t.id}
+                  initialHtml={content[t.id]}
+                  limit={LEVEL_CHAR_LIMIT}
+                  placeholder={t.placeholder}
+                  onChange={(html, len) => {
+                    setContent((c) => ({ ...c, [t.id]: html }));
+                    setContentLength((c) => ({ ...c, [t.id]: len }));
+                  }}
+                />
               ),
           )}
           {fieldErrors["content.basico"] && (
-            <p className="text-xs text-destructive">{fieldErrors["content.basico"]}</p>
+            <p className="text-xs text-red-600">{fieldErrors["content.basico"]}</p>
           )}
         </Section>
 
@@ -528,9 +716,9 @@ export const PublishArticle = () => {
           {terms.length > 0 && (
             <ul className="space-y-2">
               {terms.map((t, i) => (
-                <li key={i} className="flex items-start gap-2 p-3 rounded-xl bg-muted">
+                <li key={i} className="flex items-start gap-2 p-3 rounded-lg bg-slate-50">
                   <div className="flex-1 text-sm">
-                    <span className="font-semibold">{t.term}</span>
+                    <span className="font-semibold text-slate-800">{t.term}</span>
                     <span className="text-muted-foreground">
                       {" "}
                       — {t.definition.slice(0, 80)}
@@ -548,18 +736,18 @@ export const PublishArticle = () => {
             </ul>
           )}
           {showTermForm ? (
-            <div className="space-y-2 p-3 rounded-xl border border-border">
+            <div className="space-y-2 p-3 rounded-lg border border-slate-200">
               <input
                 value={newTerm.term}
                 onChange={(e) => setNewTerm({ ...newTerm, term: e.target.value })}
                 placeholder="Termo"
-                className="w-full px-3 py-2 rounded-lg border border-border text-sm"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-violet-300"
               />
               <input
                 value={newTerm.definition}
                 onChange={(e) => setNewTerm({ ...newTerm, definition: e.target.value })}
                 placeholder="Definição"
-                className="w-full px-3 py-2 rounded-lg border border-border text-sm"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-violet-300"
               />
               <div className="flex gap-2 justify-end">
                 <button
@@ -578,7 +766,7 @@ export const PublishArticle = () => {
                     setNewTerm({ term: "", definition: "" });
                     setShowTermForm(false);
                   }}
-                  className="text-xs font-semibold text-white bg-violet-600 px-3 py-1.5 rounded-lg"
+                  className="text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 px-3 py-1.5 rounded-md transition-colors"
                 >
                   Adicionar
                 </button>
@@ -601,7 +789,7 @@ export const PublishArticle = () => {
           open={openSec.s4}
           onToggle={() => toggle("s4")}
         >
-          <div className="flex gap-2 p-3 rounded-xl bg-sky-50 border border-sky-200 text-xs text-sky-900">
+          <div className="flex gap-2 p-3 rounded-lg bg-sky-50 border border-sky-100 text-xs text-sky-900">
             <Info size={16} className="shrink-0 mt-0.5" />
             <p>
               Artigos sem referências são classificados como <strong>Opinião</strong> e aparecem com
@@ -611,9 +799,9 @@ export const PublishArticle = () => {
           {refs.length > 0 && (
             <ul className="space-y-2">
               {refs.map((r, i) => (
-                <li key={i} className="flex items-start gap-2 p-3 rounded-xl bg-muted">
+                <li key={i} className="flex items-start gap-2 p-3 rounded-lg bg-slate-50">
                   <div className="flex-1 text-sm min-w-0">
-                    <div className="font-semibold truncate">{r.label}</div>
+                    <div className="font-semibold text-slate-800 truncate">{r.label}</div>
                     {r.url && <div className="text-xs text-muted-foreground truncate">{r.url}</div>}
                   </div>
                   <button
@@ -627,18 +815,18 @@ export const PublishArticle = () => {
             </ul>
           )}
           {showRefForm ? (
-            <div className="space-y-2 p-3 rounded-xl border border-border">
+            <div className="space-y-2 p-3 rounded-lg border border-slate-200">
               <input
                 value={newRef.label}
                 onChange={(e) => setNewRef({ ...newRef, label: e.target.value })}
                 placeholder="Fonte / Título"
-                className="w-full px-3 py-2 rounded-lg border border-border text-sm"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-violet-300"
               />
               <input
                 value={newRef.url}
                 onChange={(e) => setNewRef({ ...newRef, url: e.target.value })}
                 placeholder="URL (opcional)"
-                className="w-full px-3 py-2 rounded-lg border border-border text-sm"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-violet-300"
               />
               <div className="flex gap-2 justify-end">
                 <button
@@ -657,7 +845,7 @@ export const PublishArticle = () => {
                     setNewRef({ label: "", url: "" });
                     setShowRefForm(false);
                   }}
-                  className="text-xs font-semibold text-white bg-violet-600 px-3 py-1.5 rounded-lg"
+                  className="text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 px-3 py-1.5 rounded-md transition-colors"
                 >
                   Adicionar
                 </button>
@@ -680,7 +868,7 @@ export const PublishArticle = () => {
               Imagem de capa
             </p>
             {imagePreview ? (
-              <div className="relative rounded-xl overflow-hidden aspect-video bg-muted">
+              <div className="relative rounded-lg overflow-hidden aspect-video bg-slate-100">
                 <img
                   src={imagePreview}
                   alt="Pré-visualização"
@@ -698,7 +886,7 @@ export const PublishArticle = () => {
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
-                className="w-full aspect-video rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-violet-400 hover:text-violet-600 transition-colors"
+                className="w-full aspect-video rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-violet-300 hover:text-violet-600 transition-colors"
               >
                 <ImageIcon size={22} />
                 <span className="text-xs font-semibold">
@@ -726,14 +914,14 @@ export const PublishArticle = () => {
                 <button
                   type="button"
                   onClick={() => setAudioTab("gravar")}
-                  className={`py-2 rounded-xl text-xs font-semibold border transition-all flex items-center justify-center gap-1.5 ${audioTab === "gravar" ? "bg-violet-600 text-white border-transparent" : "border-border text-muted-foreground"}`}
+                  className={`py-2 rounded-lg text-xs font-semibold border transition-colors flex items-center justify-center gap-1.5 ${audioTab === "gravar" ? "bg-violet-600 text-white border-transparent" : "border-slate-200 text-muted-foreground hover:border-slate-300"}`}
                 >
                   <Mic size={13} /> Gravar
                 </button>
                 <button
                   type="button"
                   onClick={() => setAudioTab("importar")}
-                  className={`py-2 rounded-xl text-xs font-semibold border transition-all flex items-center justify-center gap-1.5 ${audioTab === "importar" ? "bg-violet-600 text-white border-transparent" : "border-border text-muted-foreground"}`}
+                  className={`py-2 rounded-lg text-xs font-semibold border transition-colors flex items-center justify-center gap-1.5 ${audioTab === "importar" ? "bg-violet-600 text-white border-transparent" : "border-slate-200 text-muted-foreground hover:border-slate-300"}`}
                 >
                   <Upload size={13} /> Importar ficheiro
                 </button>
@@ -741,9 +929,11 @@ export const PublishArticle = () => {
             )}
 
             {audioFile && audioPreview ? (
-              <div className="rounded-xl border border-border p-3 space-y-2">
+              <div className="rounded-lg border border-slate-200 p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold truncate">{audioSourceLabel}</span>
+                  <span className="text-xs font-semibold text-slate-800 truncate">
+                    {audioSourceLabel}
+                  </span>
                   <button
                     onClick={removeAudio}
                     className="text-muted-foreground hover:text-red-600 shrink-0"
@@ -760,7 +950,7 @@ export const PublishArticle = () => {
                 )}
               </div>
             ) : audioTab === "gravar" ? (
-              <div className="rounded-xl border border-border p-4 flex flex-col items-center gap-3">
+              <div className="rounded-lg border border-slate-200 p-4 flex flex-col items-center gap-3">
                 {isRecording ? (
                   <>
                     <div className="flex items-center gap-2 text-red-600">
@@ -799,7 +989,7 @@ export const PublishArticle = () => {
               <button
                 type="button"
                 onClick={() => audioInputRef.current?.click()}
-                className="w-full rounded-xl border-2 border-dashed border-border p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-violet-400 hover:text-violet-600 transition-colors"
+                className="w-full rounded-lg border-2 border-dashed border-slate-200 p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-violet-300 hover:text-violet-600 transition-colors"
               >
                 <Upload size={20} />
                 <span className="text-xs font-semibold">
@@ -818,7 +1008,7 @@ export const PublishArticle = () => {
         </Section>
       </div>
 
-      <footer className="fixed bottom-0 inset-x-0 md:left-60 z-20 border-t border-border bg-white/95 backdrop-blur-sm p-3 flex gap-2 mb-16 md:mb-0">
+      <footer className="fixed bottom-0 inset-x-0 md:left-60 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-sm p-3 flex gap-2 mb-16 md:mb-0">
         <button onClick={handleDraft} className="btn-ghost flex-1">
           Guardar rascunho
         </button>
