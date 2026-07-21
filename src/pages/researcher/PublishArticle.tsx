@@ -506,7 +506,7 @@ export const PublishArticle = () => {
             sublabel: "Análise técnica",
             content: content.avancado,
           },
-        ].filter((item) => plainTextLength(item.content).length > 0),
+        ].filter((item) => plainTextLength(item.content) > 0),
       ),
     );
     form.append("keyTerms", JSON.stringify(terms));
