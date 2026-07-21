@@ -128,13 +128,12 @@ export const ArticleDetail = () => {
 
     if (hasHTML) {
       // Se contém HTML, renderiza como HTML puro
-      // (os tooltips de termos-chave funcionam melhor com texto simples)
       return (
         <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: text }} />
       );
     }
 
-    // Lógica original com busca case-insensitive
+    // Lógica com busca case-insensitive e destaque visual
     const parts: (string | React.ReactElement)[] = [text];
     keyTerms.forEach((kt) => {
       const result: (string | React.ReactElement)[] = [];
@@ -144,7 +143,7 @@ export const ArticleDetail = () => {
           return;
         }
 
-        // Busca case-insensitive: converte ambos para lowercase apenas para a busca
+        // Busca case-insensitive
         const lowerPart = part.toLowerCase();
         const lowerTerm = kt.term.toLowerCase();
         const idx = lowerPart.indexOf(lowerTerm);
@@ -154,10 +153,19 @@ export const ArticleDetail = () => {
           return;
         }
 
+        // Adiciona texto antes do termo
         result.push(part.slice(0, idx));
+
+        // Destaca o termo com estilo e tooltip
         result.push(
-          <TermTooltip key={`${kt.term}-${idx}`} term={kt.term} definition={kt.definition} />,
+          <TermTooltip
+            key={`${kt.term}-${idx}`}
+            term={part.slice(idx, idx + kt.term.length)}
+            definition={kt.definition}
+          />,
         );
+
+        // Adiciona texto depois do termo e continua processando
         result.push(part.slice(idx + kt.term.length));
       });
       parts.splice(0, parts.length, ...result);
@@ -189,7 +197,7 @@ export const ArticleDetail = () => {
             <img
               src={coverImage}
               alt={article.title}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover object-center"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).style.display = "none";
               }}

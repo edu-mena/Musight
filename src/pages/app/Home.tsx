@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { api, type ApiArticle, type ApiDebate } from "../../lib/apiClient";
@@ -11,6 +11,8 @@ import {
   ChevronRight,
   X,
   BookOpen,
+  Flame,
+  TrendingUp,
 } from "lucide-react";
 
 function Spinner() {
@@ -19,7 +21,6 @@ function Spinner() {
   );
 }
 
-// Backend às vezes devolve "host/caminho" sem protocolo — normaliza antes de usar.
 function withProtocol(url: string | null | undefined): string | null {
   if (!url) return null;
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
@@ -31,8 +32,6 @@ function greetingForHour(hour: number) {
   return "Boa noite";
 }
 
-// Linha de estatísticas reaproveitada nos cards de debate — ícones em
-// cinzento escuro, nunca laranja: laranja fica só para a acção principal.
 function StatRow({
   items,
   tone = "light",
@@ -59,14 +58,17 @@ export const Home = () => {
   const [debates, setDebates] = useState<ApiDebate[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDebate, setSelectedDebate] = useState<ApiDebate | null>(null);
+  const [currentArticleIndex, setCurrentArticleIndex] = useState(0);
+  const articlesScrollRef = useRef<HTMLDivElement>(null);
+  const autoScrollTimer = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     Promise.all([
       api.get<{ articles: ApiArticle[]; total: number; page: number; limit: number }>(
-        "/articles?limit=3",
+        "/articles?limit=6",
       ),
       api.get<{ debates: ApiDebate[]; total: number; page: number; limit: number }>(
-        "/debates?limit=4",
+        "/debates?limit=6",
       ),
     ])
       .then(([a, d]) => {
@@ -77,7 +79,27 @@ export const Home = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Trava o scroll da Home por trás do bottom sheet, sem a desmontar.
+  // Auto-scroll do carrossel de artigos
+  useEffect(() => {
+    if (articles.length === 0) return;
+
+    autoScrollTimer.current = setInterval(() => {
+      setCurrentArticleIndex((prev) => (prev + 1) % articles.length);
+    }, 5000); // Muda a cada 5 segundos
+
+    return () => {
+      if (autoScrollTimer.current) clearInterval(autoScrollTimer.current);
+    };
+  }, [articles.length]);
+
+  // Scroll automático do container
+  useEffect(() => {
+    if (!articlesScrollRef.current || articles.length === 0) return;
+
+    const cardWidth = articlesScrollRef.current.offsetWidth;
+    articlesScrollRef.current.scrollLeft = currentArticleIndex * cardWidth;
+  }, [currentArticleIndex, articles.length]);
+
   useEffect(() => {
     document.body.style.overflow = selectedDebate ? "hidden" : "";
     return () => {
@@ -92,161 +114,278 @@ export const Home = () => {
     typeof d.comments?.length === "number" ? d.comments.length : null;
 
   return (
-    <div className="px-4 py-5 space-y-8">
-      {/* Greeting */}
-      <div>
-        <p className="text-muted-foreground text-sm">{greetingForHour(new Date().getHours())},</p>
-        <h1 className="font-display font-bold text-2xl text-foreground">
-          {user?.name?.split(" ")[0]}
-        </h1>
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
+      <div className="px-4 py-5 space-y-8">
+        {/* Greeting */}
+        <div>
+          <p className="text-muted-foreground text-sm">{greetingForHour(new Date().getHours())},</p>
+          <h1 className="font-display font-bold text-3xl text-foreground">
+            {user?.name?.split(" ")[0]}
+          </h1>
+        </div>
+
+        {/* Artigos — Carrossel Horizontal */}
+        {!loading && safeArticles.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between px-0.5">
+              <h2 className="font-display font-bold text-lg">Leia agora</h2>
+              <Link
+                to="/app/artigos"
+                className="text-xs text-muted-foreground font-semibold flex items-center gap-0.5 hover:text-foreground transition-colors"
+              >
+                Ver todos <ChevronRight size={12} />
+              </Link>
+            </div>
+
+            <div className="relative">
+              {/* Carrossel */}
+              <div
+                ref={articlesScrollRef}
+                className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide pb-2"
+                style={{ scrollBehavior: "smooth" }}
+              >
+                {safeArticles.map((article, idx) => {
+                  const cover = withProtocol(article.image);
+                  const isActive = idx === currentArticleIndex;
+
+                  return (
+                    <Link
+                      key={article.id}
+                      to={`/app/artigos/${article.id}`}
+                      className={`
+                        snap-start shrink-0 transition-all duration-300
+                        ${isActive ? "w-full" : "w-[85vw] md:w-96 opacity-60 hover:opacity-100"}
+                      `}
+                    >
+                      <div className="h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-card">
+                        {/* Imagem */}
+                        <div className="relative aspect-[4/3] bg-secondary overflow-hidden">
+                          {cover ? (
+                            <img
+                              src={cover}
+                              alt={article.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <BookOpen size={32} className="text-muted-foreground/40" />
+                            </div>
+                          )}
+
+                          {/* Gradiente overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                          {/* Badge de áudio flutuante */}
+                          {article.hasAudio && (
+                            <div className="absolute top-3 right-3">
+                              <span className="inline-flex items-center gap-1 pill bg-primary text-white text-[10px] font-bold px-2 py-1">
+                                <Headphones size={10} /> Áudio
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Conteúdo */}
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="pill bg-primary/10 text-primary text-[10px] font-bold uppercase">
+                              {article.category}
+                            </span>
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <Eye size={12} /> {article.views}
+                            </div>
+                          </div>
+
+                          <h3 className="font-display font-bold text-lg leading-snug line-clamp-2">
+                            {article.title}
+                          </h3>
+
+                          <div className="flex items-center gap-2 pt-2">
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-[10px] font-bold text-white">
+                              +
+                            </div>
+                            <span className="text-xs text-muted-foreground">Ler artigo</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Navegação — Dots */}
+              <div className="flex items-center justify-center gap-2 mt-4">
+                {safeArticles.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setCurrentArticleIndex(idx);
+                      // Reset do auto-scroll
+                      if (autoScrollTimer.current) clearInterval(autoScrollTimer.current);
+                      autoScrollTimer.current = setInterval(() => {
+                        setCurrentArticleIndex((prev) => (prev + 1) % safeArticles.length);
+                      }, 5000);
+                    }}
+                    className={`h-2 rounded-full transition-all ${
+                      idx === currentArticleIndex
+                        ? "bg-primary w-8"
+                        : "bg-primary/20 w-2 hover:bg-primary/40"
+                    }`}
+                    aria-label={`Ir para artigo ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {loading && (
+          <div className="card-app p-8 flex justify-center">
+            <Spinner />
+          </div>
+        )}
+
+        {/* Weza — Destaque */}
+        <Link
+          to="/app/ia"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 p-4 hover:border-primary/40 transition-all group"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <Bot size={20} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-display font-bold text-sm">Perguntar à Weza</p>
+              <p className="text-xs text-muted-foreground">
+                Dúvidas sobre uma notícia? Pergunta com contexto.
+              </p>
+            </div>
+            <ChevronRight size={16} className="text-primary shrink-0" />
+          </div>
+        </Link>
+
+        {/* Debates — Estilo Jornal Profissional */}
+        {!loading && safeDebates.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between px-0.5">
+              <div className="flex items-center gap-2">
+                <TrendingUp size={18} className="text-primary" />
+                <h2 className="font-display font-bold text-lg">O que acha disso</h2>
+              </div>
+              <Link
+                to="/app/debates"
+                className="text-xs text-muted-foreground font-semibold flex items-center gap-0.5 hover:text-foreground transition-colors"
+              >
+                Ver todos <ChevronRight size={12} />
+              </Link>
+            </div>
+
+            {/* Grid de debates estilo jornal */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {safeDebates.map((debate, idx) => {
+                const isHighlight = idx === 0;
+
+                return (
+                  <button
+                    key={debate.id}
+                    onClick={() => setSelectedDebate(debate)}
+                    className={`
+                      text-left rounded-2xl overflow-hidden
+                      transition-all duration-300 hover:shadow-lg active:scale-[0.98]
+                      ${
+                        isHighlight
+                          ? "col-span-1 md:col-span-2 bg-gradient-to-br from-surface-dark to-surface-dark/80 text-white p-5 border border-white/10"
+                          : "bg-card p-4 border border-border hover:border-foreground/30"
+                      }
+                    `}
+                  >
+                    <div className={isHighlight ? "space-y-3" : "space-y-2"}>
+                      {/* Badge de categoria */}
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`
+                            pill text-[10px] font-bold uppercase
+                            ${
+                              isHighlight
+                                ? "bg-primary/20 text-primary"
+                                : "bg-secondary text-foreground/70"
+                            }
+                          `}
+                        >
+                          {debate.category}
+                        </span>
+                        {isHighlight && (
+                          <span className="flex items-center gap-1 pill bg-red-500/20 text-red-500 text-[10px] font-bold">
+                            <Flame size={10} /> Em destaque
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Título */}
+                      <h3
+                        className={`
+                          font-display font-bold leading-snug
+                          ${isHighlight ? "text-lg line-clamp-2" : "text-base line-clamp-2"}
+                        `}
+                      >
+                        {debate.title}
+                      </h3>
+
+                      {/* Resumo (apenas no highlight) */}
+                      {isHighlight && (
+                        <p className="text-sm text-white/80 line-clamp-2">{debate.summary}</p>
+                      )}
+
+                      {/* Stats */}
+                      <div className={`flex items-center gap-3 ${isHighlight ? "pt-2" : ""}`}>
+                        <span
+                          className={`
+                            flex items-center gap-1.5 font-semibold
+                            ${isHighlight ? "text-white/70 text-xs" : "text-muted-foreground text-[11px]"}
+                          `}
+                        >
+                          <Users size={isHighlight ? 13 : 11} /> {debate.participants}
+                        </span>
+                        <span
+                          className={`
+                            flex items-center gap-1.5 font-semibold
+                            ${isHighlight ? "text-white/70 text-xs" : "text-muted-foreground text-[11px]"}
+                          `}
+                        >
+                          <MessageSquare size={isHighlight ? 13 : 11} /> {debate.expertsCount}
+                        </span>
+                      </div>
+
+                      {/* CTA */}
+                      <div className={`flex items-center gap-2 ${isHighlight ? "pt-3" : "pt-1"}`}>
+                        <div
+                          className={`flex items-center gap-2 transition-transform group-hover:translate-x-1 ${
+                            isHighlight
+                              ? "text-primary text-sm font-bold"
+                              : "text-primary text-xs font-semibold"
+                          }`}
+                        >
+                          Ver debate
+                          <ChevronRight
+                            size={isHighlight ? 14 : 12}
+                            className="transition-transform group-hover:translate-x-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
 
-      {/* Artigos — Feed de notícias com cards empilhados */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-0.5">
-          <h2 className="font-display font-bold text-lg">Artigos recentes</h2>
-          <Link
-            to="/app/artigos"
-            className="text-xs text-muted-foreground font-semibold flex items-center gap-0.5 hover:text-foreground transition-colors"
-          >
-            Ver todos <ChevronRight size={12} />
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="card-app p-6 flex justify-center">
-            <Spinner />
-          </div>
-        ) : safeArticles.length > 0 ? (
-          <div className="space-y-3">
-            {safeArticles.map((article) => {
-              const cover = withProtocol(article.image);
-              return (
-                <Link
-                  key={article.id}
-                  to={`/app/artigos/${article.id}`}
-                  className="card-app block overflow-hidden group"
-                >
-                  {/* Imagem — full width com fallback */}
-                  <div className="relative aspect-[4/3] bg-secondary overflow-hidden">
-                    {cover ? (
-                      <img
-                        src={cover}
-                        alt={article.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookOpen size={28} className="text-muted-foreground/40" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Conteúdo do card */}
-                  <div className="p-4 space-y-3">
-                    {/* Categoria e áudio badge */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="pill bg-secondary text-foreground/70 text-[10px] font-mono-accent uppercase">
-                        {article.category}
-                      </span>
-                      {article.hasAudio && (
-                        <span className="flex items-center gap-1 pill bg-primary/10 text-primary text-[10px] font-semibold">
-                          <Headphones size={10} /> {article.audioDuration}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Título */}
-                    <h3 className="font-display font-bold text-base leading-snug group-hover:text-primary transition-colors">
-                      {article.title}
-                    </h3>
-
-                    {/* Stats de engagement */}
-                    <StatRow
-                      items={[
-                        { icon: Eye, value: article.views },
-                        ...(article.hasAudio ? [{ icon: Headphones, value: "Áudio" }] : []),
-                      ]}
-                    />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="card-app p-6 text-center text-sm text-muted-foreground">
-            Em breve novos artigos.
-          </div>
-        )}
-      </section>
-
-      {/* Weza — discreta, um único toque de laranja na seta */}
-      <Link
-        to="/app/ia"
-        className="card-app flex items-center gap-3 p-4 hover:shadow-md transition-shadow"
-      >
-        <div className="w-10 h-10 rounded-full bg-surface-dark flex items-center justify-center shrink-0">
-          <Bot size={18} className="text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-display font-bold text-sm">Perguntar à Weza</p>
-          <p className="text-xs text-muted-foreground">
-            Dúvidas sobre uma notícia? Pergunta com contexto.
-          </p>
-        </div>
-        <ChevronRight size={16} className="text-primary shrink-0" />
-      </Link>
-
-      {/* Debates — por último. Sem destaque, cards neutros num carrossel
-          horizontal. Dados minimizados de propósito: o clique já abre o
-          bottom sheet com o resumo completo, então o card só precisa de
-          identificar o debate, não de o explicar. */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-0.5">
-          <h2 className="font-display font-bold text-lg">O que acha disso:</h2>
-          <Link
-            to="/app/debates"
-            className="text-xs text-muted-foreground font-semibold flex items-center gap-0.5 hover:text-foreground transition-colors"
-          >
-            Ver todos <ChevronRight size={12} />
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="card-app p-6 flex justify-center">
-            <Spinner />
-          </div>
-        ) : safeDebates.length > 0 ? (
-          <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none snap-x snap-mandatory">
-            {safeDebates.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => setSelectedDebate(d)}
-                className="snap-start shrink-0 w-40 text-left rounded-2xl bg-secondary p-3.5 hover:bg-secondary/70 transition-colors"
-              >
-                <span className="text-[10px] font-mono-accent uppercase text-muted-foreground">
-                  {d.category}
-                </span>
-                <h4 className="font-display font-bold text-sm leading-snug mt-1 line-clamp-3">
-                  {d.title}
-                </h4>
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground mt-2.5">
-                  <Users size={11} /> {d.participants}
-                </span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="card-app p-6 text-center text-sm text-muted-foreground">
-            Em breve novos debates.
-          </div>
-        )}
-      </section>
-
-      {/* Bottom sheet — pré-visualização do debate, sem fechar a Home */}
+      {/* Bottom sheet — Pré-visualização do debate */}
       {selectedDebate && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <button
